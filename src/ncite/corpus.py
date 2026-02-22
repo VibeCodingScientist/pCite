@@ -13,6 +13,7 @@ import asyncio, json, sys, urllib.parse
 from pathlib import Path
 import httpx
 from ncite.models import Paper
+from ncite import config
 
 PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_FETCH  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
@@ -20,14 +21,21 @@ METABO_DOI    = "https://www.ebi.ac.uk/metabolights/ws/studies/doi"
 DATA_FILE     = Path("data/papers.jsonl")
 DEFAULT_QUERY = '("metabolomics"[MeSH] OR "metabolomics"[Title]) AND "biomarker"[Title/Abstract]'
 
-_sem = asyncio.Semaphore(3)   # PubMed: 3 req/s without API key
+_sem = asyncio.Semaphore(config.PUBMED_RATE_LIMIT)
+
+
+def _ncbi_params(**kwargs) -> dict:
+    """Add NCBI API key to params if configured."""
+    if config.NCBI_API_KEY:
+        kwargs["api_key"] = config.NCBI_API_KEY
+    return kwargs
 
 
 async def _search_pmids(query: str, max_results: int, client: httpx.AsyncClient) -> list[str]:
-    resp = await client.get(PUBMED_SEARCH, params={
-        "db": "pubmed", "term": query, "retmax": max_results,
-        "retmode": "json", "datetype": "pdat", "mindate": "2015",
-    })
+    resp = await client.get(PUBMED_SEARCH, params=_ncbi_params(
+        db="pubmed", term=query, retmax=max_results,
+        retmode="json", datetype="pdat", mindate="2015",
+    ))
     return resp.json()["esearchresult"]["idlist"]
 
 
@@ -51,9 +59,9 @@ async def _check_deposit(doi: str, client: httpx.AsyncClient) -> str | None:
 async def _fetch_paper(pmid: str, client: httpx.AsyncClient) -> Paper | None:
     async with _sem:
         try:
-            resp = await client.get(PUBMED_FETCH, params={
-                "db": "pubmed", "id": pmid, "retmode": "xml", "rettype": "abstract"
-            })
+            resp = await client.get(PUBMED_FETCH, params=_ncbi_params(
+                db="pubmed", id=pmid, retmode="xml", rettype="abstract",
+            ))
             xml   = resp.text
             doi   = _between(xml, '<ELocationID EIdType="doi"', "</ELocationID>").split(">")[-1]
             title = _between(xml, "<ArticleTitle>", "</ArticleTitle>")
@@ -78,7 +86,8 @@ def _between(text: str, start: str, end: str) -> str:
         return ""
 
 
-async def build_corpus(query: str = DEFAULT_QUERY, max_results: int = 2000) -> int:
+async def build_corpus(query: str = DEFAULT_QUERY, max_results: int | None = None) -> int:
+    max_results = max_results or config.PUBMED_MAX_RESULTS
     DATA_FILE.parent.mkdir(exist_ok=True)
     async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         pmids  = await _search_pmids(query, max_results, client)

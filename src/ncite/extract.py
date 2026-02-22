@@ -16,10 +16,18 @@ from ncite.models import (
     Claim, Entity, Paper, Predicate, ProvenanceEntry,
     StatisticalQualifiers, ValidationClass,
 )
+from ncite import config
 
 DATA_OUT = Path("data/claims.jsonl")
-_client  = anthropic.AsyncAnthropic()
+_client: anthropic.AsyncAnthropic | None = None
 _sem     = asyncio.Semaphore(5)
+
+
+def _get_client() -> anthropic.AsyncAnthropic:
+    global _client
+    if _client is None:
+        _client = anthropic.AsyncAnthropic(api_key=config.require_api_key())
+    return _client
 
 _PROMPT = """\
 Extract atomic scientific claims from this metabolomics paper.
@@ -87,8 +95,8 @@ async def _extract(paper: Paper) -> list[Claim]:
         text += "\n\n" + paper.full_text[:3000]
     async with _sem:
         try:
-            resp = await _client.messages.create(
-                model="claude-sonnet-4-6",
+            resp = await _get_client().messages.create(
+                model=config.CLAUDE_MODEL,
                 max_tokens=2048,
                 tools=[_SCHEMA],
                 tool_choice={"type": "tool", "name": "submit_claims"},

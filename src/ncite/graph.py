@@ -16,13 +16,21 @@ import asyncio, functools, json, sys
 from pathlib import Path
 import httpx, networkx as nx, anthropic
 from ncite.models import Claim, NCiteType, NCITE_WEIGHT
+from ncite import config
 
 GRAPH_OUT  = Path("data/graph.graphml")
 SCORES_OUT = Path("data/scores.jsonl")
 OPENALEX   = "https://api.openalex.org/works"
 
-_client = anthropic.Anthropic()
+_client: anthropic.Anthropic | None = None
 _sem    = asyncio.Semaphore(5)
+
+
+def _get_client() -> anthropic.Anthropic:
+    global _client
+    if _client is None:
+        _client = anthropic.Anthropic(api_key=config.require_api_key())
+    return _client
 
 
 def build_claim_nodes(claims: list[Claim]) -> nx.DiGraph:
@@ -45,7 +53,7 @@ async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
         try:
             resp = await client.get(OPENALEX, params={
                 "filter": f"cites:{doi}", "select": "doi",
-                "per-page": 50, "mailto": "research@ncite.org",
+                "per-page": 50, "mailto": config.OPENALEX_EMAIL,
             }, timeout=15)
             return [
                 w["doi"].replace("https://doi.org/", "")
@@ -58,11 +66,10 @@ async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
 @functools.lru_cache(maxsize=50_000)
 def _classify(src_text: str, tgt_text: str) -> NCiteType:
     """
-    Classify citation relationship. Claude Haiku — fast and cheap for single-word output.
-    Cached: most claim pairs recur across the corpus.
+    Classify citation relationship via Claude. Cached: most claim pairs recur across the corpus.
     """
-    resp = _client.messages.create(
-        model="claude-haiku-4-5-20251001",
+    resp = _get_client().messages.create(
+        model=config.CLAUDE_MODEL,
         max_tokens=10,
         messages=[{"role": "user", "content":
             f'Source: "{src_text}"\nTarget: "{tgt_text}"\n\n'
