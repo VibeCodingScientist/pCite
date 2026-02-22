@@ -27,7 +27,7 @@ async def main(dry_run: bool = False) -> int:
         print("3/5  Validation + nanopublications...")
         print(f"     {validate.process_claims()} claims classified\n")
 
-        print("4/5  nCite graph (OpenAlex + Claude Haiku)...")
+        print("4/5  nCite graph (OpenAlex + Claude Sonnet)...")
         G = await graph.build_full_graph()
         print(f"     {G.number_of_nodes()} nodes, {G.number_of_edges()} edges\n")
 
