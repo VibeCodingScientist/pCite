@@ -10,3 +10,4 @@ build/
 figures/
 *.trig
 .ipynb_checkpoints/
+.venv/
