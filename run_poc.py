@@ -18,7 +18,7 @@ async def main(dry_run: bool = False) -> int:
     print("\nnCite PoC — Validation-Weighted Citation Graph for Metabolomics\n")
 
     if not dry_run:
-        print("1/5  Corpus (PubMed + MetaboLights)...")
+        print("1/5  Corpus (PubMed repository-first + MetaboLights)...")
         print(f"     {await corpus.build_corpus()} papers\n")
 
         print("2/5  Extraction (Claude Sonnet)...")

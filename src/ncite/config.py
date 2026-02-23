@@ -19,7 +19,8 @@ ANTHROPIC_API_KEY: str = os.environ.get("ANTHROPIC_API_KEY", "")
 NCBI_API_KEY: str | None = os.environ.get("NCBI_API_KEY") or None
 OPENALEX_EMAIL: str = os.environ.get("OPENALEX_EMAIL", "research@ncite.org")
 CLAUDE_MODEL: str = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
-PUBMED_MAX_RESULTS: int = int(os.environ.get("PUBMED_MAX_RESULTS", "2000"))
+PUBMED_MAX_PER_QUERY: int = int(os.environ.get("PUBMED_MAX_PER_QUERY", "2000"))
+PUBMED_MAX_RESULTS: int = PUBMED_MAX_PER_QUERY  # backwards compat alias
 
 # ── Derived ───────────────────────────────────────────────────────────
 PUBMED_RATE_LIMIT: int = 10 if NCBI_API_KEY else 3

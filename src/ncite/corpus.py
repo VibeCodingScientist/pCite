@@ -19,7 +19,15 @@ PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_FETCH  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 METABO_DOI    = "https://www.ebi.ac.uk/metabolights/ws/studies/doi"
 DATA_FILE     = Path("data/papers.jsonl")
-DEFAULT_QUERY = '("metabolomics"[MeSH] OR "metabolomics"[Title]) AND "biomarker"[Title/Abstract]'
+REPO_QUERY = (
+    '"MetaboLights"[All Fields] OR "MTBLS"[All Fields] '
+    'OR "Metabolomics Workbench"[All Fields]'
+)
+DISEASE_QUERY = (
+    '"colorectal neoplasms"[MeSH] AND '
+    '("metabolomics"[MeSH] OR "metabolomics"[Title/Abstract])'
+)
+DEFAULT_QUERIES = [REPO_QUERY, DISEASE_QUERY]
 
 _sem_metabo = asyncio.Semaphore(5)
 _BATCH_SIZE = 200  # PubMed efetch max per request
@@ -114,23 +122,38 @@ async def _fetch_batch(pmids: list[str], client: httpx.AsyncClient) -> list[dict
     return articles
 
 
-async def build_corpus(query: str = DEFAULT_QUERY, max_results: int | None = None) -> int:
-    max_results = max_results or config.PUBMED_MAX_RESULTS
+async def build_corpus(
+    queries: list[str] | None = None,
+    max_per_query: int | None = None,
+) -> int:
+    queries = queries or DEFAULT_QUERIES
+    max_per_query = max_per_query or config.PUBMED_MAX_PER_QUERY
     DATA_FILE.parent.mkdir(exist_ok=True)
+
     async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
-        pmids = await _search_pmids(query, max_results, client)
-        print(f"  {len(pmids)} PMIDs found, fetching in batches of {_BATCH_SIZE}...",
+        # Run each query and union PMIDs
+        all_pmids: set[str] = set()
+        for i, q in enumerate(queries, 1):
+            pmids = await _search_pmids(q, max_per_query, client)
+            new = len(set(pmids) - all_pmids)
+            all_pmids.update(pmids)
+            print(f"  query {i}/{len(queries)}: {len(pmids)} PMIDs ({new} new)",
+                  file=sys.stderr)
+            if i < len(queries):
+                await asyncio.sleep(0.4)  # polite pause between queries
+        pmid_list = sorted(all_pmids)
+        print(f"  {len(pmid_list)} unique PMIDs, fetching in batches of {_BATCH_SIZE}...",
               file=sys.stderr)
 
-        # Batch fetch — avoids PubMed rate limiting
+        # Batch fetch
         all_articles: list[dict] = []
-        for i in range(0, len(pmids), _BATCH_SIZE):
-            batch = pmids[i:i + _BATCH_SIZE]
+        for i in range(0, len(pmid_list), _BATCH_SIZE):
+            batch = pmid_list[i:i + _BATCH_SIZE]
             articles = await _fetch_batch(batch, client)
             all_articles.extend(articles)
             print(f"  batch {i // _BATCH_SIZE + 1}: {len(articles)} papers parsed",
                   file=sys.stderr)
-            if i + _BATCH_SIZE < len(pmids):
+            if i + _BATCH_SIZE < len(pmid_list):
                 await asyncio.sleep(0.5)  # polite pause between batches
 
         # MetaboLights deposit checks (parallel, rate-limited by _sem_metabo)
