@@ -103,7 +103,18 @@ async def _extract(paper: Paper) -> list[Claim]:
                 messages=[{"role": "user",
                             "content": _PROMPT.format(doi=paper.doi, text=text)}],
             )
-            raw = resp.content[0].input["claims"]
+            # Find the tool_use block (may not be content[0])
+            tool_block = next(
+                (b for b in resp.content if getattr(b, "type", None) == "tool_use"),
+                None,
+            )
+            if not tool_block:
+                print(f"  skip {paper.doi}: no tool_use block", file=sys.stderr)
+                return []
+            raw = tool_block.input.get("claims", [])
+            if not raw:
+                print(f"  skip {paper.doi}: empty claims", file=sys.stderr)
+                return []
         except Exception as e:
             print(f"  skip {paper.doi}: {e}", file=sys.stderr)
             return []

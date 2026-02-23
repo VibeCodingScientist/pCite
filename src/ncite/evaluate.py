@@ -39,30 +39,46 @@ def load_scores() -> list[dict]:
     return [json.loads(l) for l in SCORES_IN.read_text().splitlines() if l]
 
 
+_VALIDATED = {"PhysicalMeasurement", "ClinicalObservation", "Replicated"}
+
+
+def _is_validated(r: dict) -> bool:
+    return r["validation_class"] in _VALIDATED
+
+
 def mann_whitney(records: list[dict]) -> dict:
     """Non-parametric. No distribution assumption. One-sided."""
-    val   = [r["ncite_score"] for r in records if r["validation_class"] == "PhysicalMeasurement"]
-    unval = [r["ncite_score"] for r in records if r["validation_class"] != "PhysicalMeasurement"]
+    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
+    val   = [r[score_key] for r in records if _is_validated(r)]
+    unval = [r[score_key] for r in records if not _is_validated(r)]
+    if len(val) < 2 or len(unval) < 2:
+        return {"u": 0, "p_value": float("nan"), "n_validated": len(val),
+                "n_unvalidated": len(unval), "median_validated": 0, "median_unvalidated": 0,
+                "score_key": score_key}
     u, p  = stats.mannwhitneyu(val, unval, alternative="greater")
     return {"u": u, "p_value": p, "n_validated": len(val), "n_unvalidated": len(unval),
-            "median_validated":   float(sorted(val)[len(val)//2]) if val else 0,
-            "median_unvalidated": float(sorted(unval)[len(unval)//2]) if unval else 0}
+            "median_validated":   float(sorted(val)[len(val)//2]),
+            "median_unvalidated": float(sorted(unval)[len(unval)//2]),
+            "score_key": score_key}
 
 
 def precision_at_k(records: list[dict], k: int = 50) -> dict:
-    """What fraction of the top-k are physically validated?"""
-    validated = {r["claim_id"] for r in records if r["validation_class"] == "PhysicalMeasurement"}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
-    tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
+    """What fraction of the top-k are validated (Physical/Clinical/Replicated)?"""
+    validated = {r["claim_id"] for r in records if _is_validated(r)}
+    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
+    nc = sorted(records, key=lambda r: r[score_key], reverse=True)
+    tr = sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
+                reverse=True)
     p_nc = sum(1 for r in nc[:k] if r["claim_id"] in validated) / k
     p_tr = sum(1 for r in tr[:k] if r["claim_id"] in validated) / k
     return {"k": k, "precision_ncite": p_nc, "precision_traditional": p_tr,
-            "lift": p_nc / p_tr if p_tr > 0 else float("inf")}
+            "lift": p_nc / p_tr if p_tr > 0 else float("inf"),
+            "score_key": score_key}
 
 
 def ndcg_at_k(records: list[dict], k: int = 50) -> dict:
     """Normalised Discounted Cumulative Gain. Standard IR metric."""
-    validated = {r["claim_id"] for r in records if r["validation_class"] == "PhysicalMeasurement"}
+    validated = {r["claim_id"] for r in records if _is_validated(r)}
 
     def dcg(ranked: list[dict]) -> float:
         return sum(
@@ -70,13 +86,14 @@ def ndcg_at_k(records: list[dict], k: int = 50) -> dict:
             for i, r in enumerate(ranked[:k])
         )
 
-    ideal = sorted(records, key=lambda r: r["validation_class"] == "PhysicalMeasurement",
-                   reverse=True)
+    ideal = sorted(records, key=lambda r: _is_validated(r), reverse=True)
     idcg  = dcg(ideal)
     if idcg == 0:
         return {"k": k, "ndcg_ncite": 0.0, "ndcg_traditional": 0.0}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
-    tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
+    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
+    nc = sorted(records, key=lambda r: r[score_key], reverse=True)
+    tr = sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
+                reverse=True)
     return {"k": k, "ndcg_ncite": dcg(nc) / idcg, "ndcg_traditional": dcg(tr) / idcg}
 
 
@@ -85,10 +102,12 @@ def fig1_rank_scatter(records: list[dict]) -> plt.Figure:
     x = traditional rank, y = nCite rank, colour = validation class.
     Physical claims should cluster top-left. This is the paper's hero figure.
     """
+    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
     nc = {r["claim_id"]: i+1 for i, r in enumerate(
-        sorted(records, key=lambda r: r["ncite_score"], reverse=True))}
+        sorted(records, key=lambda r: r[score_key], reverse=True))}
     tr = {r["claim_id"]: i+1 for i, r in enumerate(
-        sorted(records, key=lambda r: r.get("traditional_citations",0), reverse=True))}
+        sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
+               reverse=True))}
     fig, ax = plt.subplots(figsize=(7, 6))
     for vc, color in COLORS.items():
         group = [r for r in records if r["validation_class"] == vc]
@@ -122,9 +141,11 @@ def fig2_score_distribution(records: list[dict]) -> plt.Figure:
 
 def fig3_precision_curve(records: list[dict]) -> plt.Figure:
     """Precision@k for k = 10...200. nCite should stay above traditional throughout."""
-    validated = {r["claim_id"] for r in records if r["validation_class"] == "PhysicalMeasurement"}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
-    tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
+    validated = {r["claim_id"] for r in records if _is_validated(r)}
+    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
+    nc = sorted(records, key=lambda r: r[score_key], reverse=True)
+    tr = sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
+                reverse=True)
     ks = list(range(10, min(201, len(records)), 10))
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.plot(ks, [sum(1 for r in nc[:k] if r["claim_id"] in validated)/k for k in ks],

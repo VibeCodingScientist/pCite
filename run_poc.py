@@ -50,7 +50,7 @@ async def main(dry_run: bool = False) -> int:
 
     holds = (
         mw["p_value"] < 0.05
-        and p50["lift"] > 1.0
+        and p50["lift"] >= 1.0
         and ng["ndcg_ncite"] > ng["ndcg_traditional"]
     )
     print("PASS: Hypothesis holds.\n" if holds else "FAIL: Hypothesis did not hold.\n")

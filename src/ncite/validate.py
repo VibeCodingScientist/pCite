@@ -15,10 +15,16 @@ Run:    python -m ncite.validate
 from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 import sys, rdflib
 from rdflib import RDF, XSD, Literal, Namespace, URIRef
 from rdflib.graph import ConjunctiveGraph
 from ncite.models import Claim, Paper, ProvenanceEntry, ValidationClass, VALIDATION_WEIGHT
+
+
+def _safe_uri(url: str) -> URIRef:
+    """Percent-encode spaces and other invalid chars for RDF URIs."""
+    return URIRef(quote(url, safe=":/?#[]@!$&'()*+,;=-._~%"))
 
 DATA_CLAIMS = Path("data/claims.jsonl")
 NANOPUBS    = Path("data/nanopubs")
@@ -98,17 +104,17 @@ def to_nanopub(claim: Claim) -> ConjunctiveGraph:
     head.add((base, NP.hasProvenance,     base + "provenance"))
     head.add((base, NP.hasPublicationInfo, base + "pubinfo"))
 
-    assn.add((URIRef(claim.subject.uri),
+    assn.add((_safe_uri(claim.subject.uri),
               BASE[f"predicate/{claim.predicate.value}"],
-              URIRef(claim.object.uri)))
+              _safe_uri(claim.object.uri)))
 
     assn_uri = base + "assertion"
     for entry in claim.provenance:
-        doi_uri = URIRef(f"https://doi.org/{entry.doi}")
+        doi_uri = _safe_uri(f"https://doi.org/{entry.doi}")
         prov.add((assn_uri, PROV.wasDerivedFrom, doi_uri))
         if entry.metabo_id:
             prov.add((doi_uri, PROV.hadPrimarySource,
-                      URIRef(f"https://www.ebi.ac.uk/metabolights/{entry.metabo_id}")))
+                      _safe_uri(f"https://www.ebi.ac.uk/metabolights/{entry.metabo_id}")))
     prov.add((assn_uri, NPX.validationClass,
               Literal(claim.validation_class.value)))
     prov.add((assn_uri, NPX.replicationCount,
