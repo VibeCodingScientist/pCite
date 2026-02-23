@@ -82,7 +82,8 @@ class Entity(BaseModel):
 
     @property
     def uri(self) -> str:
-        return f"https://identifiers.org/{self.id}"
+        from urllib.parse import quote
+        return f"https://identifiers.org/{quote(self.id, safe=':')}"
 
 
 class StatisticalQualifiers(BaseModel):
