@@ -1,24 +1,24 @@
 {
-  "n_total": 8098,
+  "n_total": 8761,
   "mann_whitney": {
-    "u": 49311.5,
-    "p_value": 1.0335674380282555e-06,
-    "n_validated": 7,
-    "n_unvalidated": 8091,
-    "median_validated": 9.1,
-    "median_unvalidated": 0.0,
-    "score_key": "ncite_score"
+    "u": 17946670.0,
+    "p_value": 0.0,
+    "n_validated": 5495,
+    "n_unvalidated": 3266,
+    "median_validated": 10.0,
+    "median_unvalidated": 0.5,
+    "score_key": "base_weight"
   },
   "precision_50": {
     "k": 50,
-    "precision_ncite": 0.02,
-    "precision_traditional": 0.14,
-    "lift": 0.14285714285714285,
+    "precision_ncite": 0.92,
+    "precision_traditional": 0.5,
+    "lift": 1.84,
     "score_key": "ncite_score"
   },
   "ndcg_50": {
     "k": 50,
-    "ndcg_ncite": 0.27487633291429087,
-    "ndcg_traditional": 0.9683310355387568
+    "ndcg_ncite": 0.9169268461991034,
+    "ndcg_traditional": 0.5966587544072053
   }
 }
