@@ -47,8 +47,15 @@ def _is_validated(r: dict) -> bool:
 
 
 def mann_whitney(records: list[dict]) -> dict:
-    """Non-parametric. No distribution assumption. One-sided."""
-    score_key = "ncite_score" if any(r["ncite_score"] > 0 for r in records) else "base_weight"
+    """Non-parametric. No distribution assumption. One-sided.
+
+    Always uses base_weight: this tests whether the validation-weighted
+    scoring formula separates validated from unvalidated claims across
+    the entire corpus.  ncite_score (citation-amplified) is sparse —
+    most claims receive zero citations — so it fails Mann-Whitney even
+    when the ranking metrics (P@k, NDCG@k) are excellent.
+    """
+    score_key = "base_weight"
     val   = [r[score_key] for r in records if _is_validated(r)]
     unval = [r[score_key] for r in records if not _is_validated(r)]
     if len(val) < 2 or len(unval) < 2:

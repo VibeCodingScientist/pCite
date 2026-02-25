@@ -14,9 +14,9 @@
 
 <p class="section-label">METABOLOMICS KNOWLEDGE GRAPH</p>
 <hr class="section-rule">
-<div class="corpus-stat">Papers: <strong>1,266</strong></div>
-<div class="corpus-stat">Claims: <strong>8,098</strong> (unique assertions, deduplicated)</div>
-<div class="corpus-stat">Physical claims: <strong>0</strong> (MetaboLights deposit verified)</div>
+<div class="corpus-stat">Papers: <strong>1,287</strong></div>
+<div class="corpus-stat">Claims: <strong>8,761</strong> (unique assertions, deduplicated)</div>
+<div class="corpus-stat">Physical claims: <strong>5,470</strong> (MetaboLights deposit verified)</div>
 
 <p class="section-label">EXPERIMENT RESULTS</p>
 <hr class="section-rule">
@@ -24,22 +24,23 @@
   <em>Hypothesis: pCite surfaces physically-validated claims better than traditional citation count.</em>
 </p>
 <table class="id-table">
-  <tr><td>Mann-Whitney U</td><td>p = 1.03e-06 &nbsp; &#10003; significant</td></tr>
-  <tr><td>Precision@50</td><td>pCite 0.02 vs Traditional 0.14 (0.1&times; lift)</td></tr>
-  <tr><td>NDCG@50</td><td>pCite 0.27 vs Traditional 0.97</td></tr>
+  <tr><td>Mann-Whitney U</td><td>p = 0.00e+00 &nbsp; &#10003; significant</td></tr>
+  <tr><td>Precision@50</td><td>pCite 0.92 vs Traditional 0.50 (1.8&times; lift)</td></tr>
+  <tr><td>NDCG@50</td><td>pCite 0.92 vs Traditional 0.60</td></tr>
 </table>
 <p style="font-size:.9rem;margin-top:.5rem"><strong>Hypothesis holds.</strong></p>
 
 <p class="section-label">VALIDATION CLASS DISTRIBUTION</p>
 <hr class="section-rule">
-<div class="dist-row"><span class="dist-label">Replicated</span><span class="dist-bar" style="width:0px;background:#ff7f0e"></span><span class="dist-count">7 &nbsp; 0.1%</span></div>
-<div class="dist-row"><span class="dist-label">Curated</span><span class="dist-bar" style="width:200px;background:#2ca02c"></span><span class="dist-count">6,371 &nbsp; 78.7%</span></div>
-<div class="dist-row"><span class="dist-label">AI Generated</span><span class="dist-bar" style="width:54px;background:#aec7e8"></span><span class="dist-count">1,720 &nbsp; 21.2%</span></div>
+<div class="dist-row"><span class="dist-label">Physical</span><span class="dist-bar" style="width:200px;background:#d62728"></span><span class="dist-count">5,470 &nbsp; 62.4%</span></div>
+<div class="dist-row"><span class="dist-label">Replicated</span><span class="dist-bar" style="width:1px;background:#ff7f0e"></span><span class="dist-count">25 &nbsp; 0.3%</span></div>
+<div class="dist-row"><span class="dist-label">Curated</span><span class="dist-bar" style="width:97px;background:#2ca02c"></span><span class="dist-count">2,661 &nbsp; 30.4%</span></div>
+<div class="dist-row"><span class="dist-label">AI Generated</span><span class="dist-bar" style="width:22px;background:#aec7e8"></span><span class="dist-count">605 &nbsp; 6.9%</span></div>
 
 <p style="font-size:.85rem;color:#555;margin-top:.75rem;max-width:640px">
-  The distribution is the argument. 21% of extracted claims have
+  The distribution is the argument. 7% of extracted claims have
   no physical anchor. Under traditional citation metrics, these
-  claims are indistinguishable from the 0.0% that do.
+  claims are indistinguishable from the 62.4% that do.
 </p>
 
 <p class="section-label">CODE &amp; DATA</p>
