@@ -12,25 +12,33 @@ Output: data/graph.graphml + data/scores.jsonl
 Run:    python -m ncite.graph
 """
 
-import asyncio, functools, json, sys
+import asyncio, functools, json, sys, time
 from pathlib import Path
-import httpx, networkx as nx, anthropic
+import httpx, networkx as nx
+from google import genai
 from ncite.models import Claim, NCiteType, NCITE_WEIGHT
 from ncite import config
 
-GRAPH_OUT  = Path("data/graph.graphml")
-SCORES_OUT = Path("data/scores.jsonl")
-OPENALEX   = "https://api.openalex.org/works"
+GRAPH_OUT       = Path("data/graph.graphml")
+SCORES_OUT      = Path("data/scores.jsonl")
+CLASSIFY_CACHE  = Path("data/classify_cache.json")
+CITATION_CACHE  = Path("data/citation_cache.json")
+OPENALEX        = "https://api.openalex.org/works"
 
-_client: anthropic.Anthropic | None = None
-_sem    = asyncio.Semaphore(5)
+_gemini_client: genai.Client | None = None
+_sem = asyncio.Semaphore(5)
 
 
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(api_key=config.require_api_key())
-    return _client
+def _get_gemini_client() -> genai.Client:
+    global _gemini_client
+    if _gemini_client is None:
+        if not config.GEMINI_API_KEY:
+            raise RuntimeError(
+                "GEMINI_API_KEY is not set. "
+                "Add it to your .env file."
+            )
+        _gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
+    return _gemini_client
 
 
 def build_claim_nodes(claims: list[Claim]) -> nx.DiGraph:
@@ -47,14 +55,42 @@ def build_claim_nodes(claims: list[Claim]) -> nx.DiGraph:
     return G
 
 
-async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
-    """OpenAlex citation lookup. Fully open, no auth, 100k req/day."""
+async def _resolve_openalex_ids(
+    dois: list[str], client: httpx.AsyncClient,
+) -> dict[str, str]:
+    """Batch-resolve bare DOIs to OpenAlex work IDs (50 per request)."""
+    mapping: dict[str, str] = {}
+    batch_size = 50
+    for i in range(0, len(dois), batch_size):
+        batch = dois[i : i + batch_size]
+        pipe_filter = "|".join(f"https://doi.org/{d}" for d in batch)
+        async with _sem:
+            try:
+                resp = await client.get(OPENALEX, params={
+                    "filter": f"doi:{pipe_filter}",
+                    "select": "id,doi",
+                    "per-page": batch_size,
+                    "mailto": config.OPENALEX_EMAIL,
+                }, timeout=30)
+                for w in resp.json().get("results", []):
+                    if w.get("doi") and w.get("id"):
+                        bare = w["doi"].replace("https://doi.org/", "")
+                        mapping[bare] = w["id"]
+            except Exception:
+                pass
+    print(f"  resolved {len(mapping)}/{len(dois)} DOIs to OpenAlex IDs",
+          file=sys.stderr)
+    return mapping
+
+
+async def _citing_dois(openalex_id: str, client: httpx.AsyncClient) -> list[str]:
+    """OpenAlex citation lookup using OpenAlex work ID."""
     async with _sem:
         try:
             resp = await client.get(OPENALEX, params={
-                "filter": f"cites:{doi}", "select": "doi",
+                "filter": f"cites:{openalex_id}", "select": "doi",
                 "per-page": 50, "mailto": config.OPENALEX_EMAIL,
-            }, timeout=15)
+            })
             return [
                 w["doi"].replace("https://doi.org/", "")
                 for w in resp.json().get("results", []) if w.get("doi")
@@ -63,20 +99,56 @@ async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
             return []
 
 
+def _load_classify_cache() -> dict[str, str]:
+    if CLASSIFY_CACHE.exists():
+        return json.loads(CLASSIFY_CACHE.read_text())
+    return {}
+
+
+def _save_classify_cache(cache: dict[str, str]) -> None:
+    CLASSIFY_CACHE.write_text(json.dumps(cache))
+
+
+_disk_cache: dict[str, str] = {}
+
+
 @functools.lru_cache(maxsize=50_000)
 def _classify(src_text: str, tgt_text: str) -> NCiteType:
     """
-    Classify citation relationship via Claude. Cached: most claim pairs recur across the corpus.
+    Classify citation relationship via Gemini Flash.
+    Cached in memory (lru_cache) and on disk (classify_cache.json).
+    Retries up to 5 times with exponential backoff.
     """
-    resp = _get_client().messages.create(
-        model=config.CLAUDE_MODEL,
-        max_tokens=10,
-        messages=[{"role": "user", "content":
-            f'Source: "{src_text}"\nTarget: "{tgt_text}"\n\n'
-            f"One word:\nsupports | extends | replicates | contradicts | applies"}]
-    )
-    word = resp.content[0].text.strip().lower().split()[0]
-    return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+    key = f"{src_text}||{tgt_text}"
+    if key in _disk_cache:
+        word = _disk_cache[key]
+        return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+
+    for attempt in range(5):
+        try:
+            resp = _get_gemini_client().models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=(
+                    f'Classify the relationship between these two biomedical claims.\n'
+                    f'Source: "{src_text}"\nTarget: "{tgt_text}"\n\n'
+                    f"Reply with EXACTLY one word, no formatting, no markdown, no asterisks:\n"
+                    f"supports | extends | replicates | contradicts | applies"
+                ),
+                config={"max_output_tokens": 10},
+            )
+            word = resp.text.strip().lower().strip("*").split()[0].strip("*")
+            _disk_cache[key] = word
+            return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+        except Exception as e:
+            wait = 2 ** attempt
+            print(f"  classify retry {attempt+1}/5 ({e}), waiting {wait}s",
+                  file=sys.stderr)
+            time.sleep(wait)
+    # All retries exhausted — default to SUPPORTS
+    print(f"  classify failed after 5 retries, defaulting to SUPPORTS",
+          file=sys.stderr)
+    _disk_cache[key] = "supports"
+    return NCiteType.SUPPORTS
 
 
 def compute_ncite_scores(G: nx.DiGraph) -> dict[str, float]:
@@ -106,30 +178,72 @@ async def build_full_graph() -> nx.DiGraph:
     G = build_claim_nodes(claims)
     print(f"  {G.number_of_nodes()} nodes", file=sys.stderr)
 
-    async with httpx.AsyncClient(follow_redirects=True) as client:
-        dois       = list(by_doi.keys())
-        citing_map = dict(zip(
-            dois,
-            await asyncio.gather(*[_citing_dois(doi, client) for doi in dois])
-        ))
+    # Load cached citations if available, otherwise query OpenAlex
+    if CITATION_CACHE.exists():
+        citing_map = json.loads(CITATION_CACHE.read_text())
+        print(f"  loaded {len(citing_map)} DOIs from citation cache",
+              file=sys.stderr)
+    else:
+        timeout = httpx.Timeout(30.0, connect=10.0)
+        limits  = httpx.Limits(max_connections=5, max_keepalive_connections=3)
+        async with httpx.AsyncClient(follow_redirects=True, timeout=timeout,
+                                     limits=limits) as client:
+            dois       = list(by_doi.keys())
+            oa_ids     = await _resolve_openalex_ids(dois, client)
+            resolved   = [(doi, oa_ids[doi]) for doi in dois if doi in oa_ids]
 
-    edges = 0
+            citing_map: dict[str, list[str]] = {}
+            batch_size = 50
+            for i in range(0, len(resolved), batch_size):
+                batch = resolved[i : i + batch_size]
+                results = await asyncio.gather(*[
+                    _citing_dois(oa_id, client) for _, oa_id in batch
+                ])
+                for (doi, _), result in zip(batch, results):
+                    citing_map[doi] = result
+                print(f"  citations: {min(i + batch_size, len(resolved))}"
+                      f"/{len(resolved)} DOIs queried", file=sys.stderr)
+
+        # Save citation cache
+        CITATION_CACHE.write_text(json.dumps(citing_map))
+        print(f"  saved citation cache ({len(citing_map)} DOIs)",
+              file=sys.stderr)
+
+    # Count candidate edges first for progress tracking
+    candidates = []
     for target_doi, citing_dois_list in citing_map.items():
         for tgt in by_doi.get(target_doi, []):
             for citing_doi in citing_dois_list:
                 for src in by_doi.get(citing_doi, []):
-                    if src.id == tgt.id:
-                        continue
-                    ntype  = _classify(
-                        f"{src.subject.name} {src.predicate.value} {src.object.name}",
-                        f"{tgt.subject.name} {tgt.predicate.value} {tgt.object.name}",
-                    )
-                    G.add_edge(src.id, tgt.id, type=ntype.value,
-                               weight=NCITE_WEIGHT[ntype] * src.base_weight,
-                               source_weight=src.base_weight)
-                    edges += 1
+                    if src.id != tgt.id:
+                        candidates.append((src, tgt))
 
-    print(f"  {edges} edges", file=sys.stderr)
+    total = len(candidates)
+    print(f"  {total} candidate edges to classify", file=sys.stderr)
+
+    global _disk_cache
+    _disk_cache = _load_classify_cache()
+    cached = sum(1 for s, t in candidates
+                 if f"{s.subject.name} {s.predicate.value} {s.object.name}||"
+                    f"{t.subject.name} {t.predicate.value} {t.object.name}" in _disk_cache)
+    if cached:
+        print(f"  {cached}/{total} already cached on disk", file=sys.stderr)
+
+    edges = 0
+    for i, (src, tgt) in enumerate(candidates):
+        ntype = _classify(
+            f"{src.subject.name} {src.predicate.value} {src.object.name}",
+            f"{tgt.subject.name} {tgt.predicate.value} {tgt.object.name}",
+        )
+        G.add_edge(src.id, tgt.id, type=ntype.value,
+                   weight=NCITE_WEIGHT[ntype] * src.base_weight,
+                   source_weight=src.base_weight)
+        edges += 1
+        if (i + 1) % 50 == 0 or (i + 1) == total:
+            print(f"  classify: {i + 1}/{total} edges", file=sys.stderr)
+            _save_classify_cache(_disk_cache)
+
+    print(f"  {edges} edges added", file=sys.stderr)
     scores = compute_ncite_scores(G)
     nx.set_node_attributes(G, scores, "ncite_score")
     nx.write_graphml(G, GRAPH_OUT)
