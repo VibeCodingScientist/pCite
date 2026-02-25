@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search claims — pCite</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1><a href="index.html">pCite</a></h1>
+  <nav><a href="index.html">Search</a><a href="corpus.html">Corpus</a></nav>
+</header>
+
+<p style="font-size:.9rem;color:#666;margin-bottom:.75rem">Validation-weighted scientific claims</p>
+
+<input type="text" id="q" placeholder="Search claims — compound, disease, or relationship" autofocus>
+
+<div class="filters">
+  <select id="f-pred"><option value="">All predicates</option>
+    <option value="activates">activates</option>
+    <option value="causes">causes</option>
+    <option value="correlates_with">correlates_with</option>
+    <option value="decreases">decreases</option>
+    <option value="distinguishes">distinguishes</option>
+    <option value="increases">increases</option>
+    <option value="inhibits">inhibits</option>
+    <option value="is_biomarker_for">is_biomarker_for</option>
+    <option value="is_metabolite_of">is_metabolite_of</option>
+    <option value="predicts">predicts</option>
+    <option value="treats">treats</option>
+</select>
+  <select id="f-class"><option value="">All classes</option>
+    <option value="PhysicalMeasurement">Physical</option>
+    <option value="ClinicalObservation">Clinical</option>
+    <option value="Replicated">Replicated</option>
+    <option value="HumanCurated">Curated</option>
+    <option value="AIGenerated">AI Generated</option>
+    <option value="Hypothesis">Hypothesis</option>
+</select>
+  <select id="f-rep">
+    <option value="1">Min replication: 1</option>
+    <option value="2">Min replication: 2</option>
+    <option value="3">Min replication: 3</option>
+    <option value="5">Min replication: 5</option>
+  </select>
+</div>
+
+<div class="summary" id="summary">8,098 claims &middot; from 1,266 papers</div>
+
+<div id="results"></div>
+<button id="load-more">Load more</button>
+
+<script>
+(function() {
+  const COLORS = {"PhysicalMeasurement": "#d62728", "ClinicalObservation": "#e377c2", "Replicated": "#ff7f0e", "HumanCurated": "#2ca02c", "AIGenerated": "#aec7e8", "Hypothesis": "#c7c7c7"};
+  let allClaims = [], filtered = [], shown = 0;
+  const BATCH = 50;
+
+  fetch("data/claims.json")
+    .then(r => r.json())
+    .then(data => { allClaims = data; applyFilters(); });
+
+  const q = document.getElementById("q");
+  const fPred = document.getElementById("f-pred");
+  const fClass = document.getElementById("f-class");
+  const fRep = document.getElementById("f-rep");
+  const results = document.getElementById("results");
+  const loadMore = document.getElementById("load-more");
+  const summary = document.getElementById("summary");
+
+  q.addEventListener("input", applyFilters);
+  fPred.addEventListener("change", applyFilters);
+  fClass.addEventListener("change", applyFilters);
+  fRep.addEventListener("change", applyFilters);
+  loadMore.addEventListener("click", showMore);
+
+  function applyFilters() {
+    const query = q.value.toLowerCase();
+    const pred = fPred.value;
+    const vc = fClass.value;
+    const minRep = parseInt(fRep.value) || 1;
+
+    filtered = allClaims.filter(c => {
+      if (query && !(c.s.toLowerCase().includes(query) ||
+          c.o.toLowerCase().includes(query) ||
+          c.p.toLowerCase().includes(query))) return false;
+      if (pred && c.p !== pred) return false;
+      if (vc && c.v !== vc) return false;
+      if (c.r < minRep) return false;
+      return true;
+    });
+
+    summary.textContent = filtered.length.toLocaleString() + " claims";
+    shown = 0;
+    results.innerHTML = "";
+    showMore();
+  }
+
+  function showMore() {
+    const end = Math.min(shown + BATCH, filtered.length);
+    for (let i = shown; i < end; i++) {
+      const c = filtered[i];
+      const color = COLORS[c.v] || "#888";
+      const div = document.createElement("div");
+      div.className = "result";
+      div.innerHTML =
+        '<div class="result-bar" style="--pct:' + c.n + '%;--color:' + color + '"></div>' +
+        '<div class="result-info">' +
+          '<div class="result-claim">' + esc(c.s) + ' <span style="color:#888">' + esc(c.p) + '</span> ' + esc(c.o) + '</div>' +
+          '<div class="result-meta">' + shortName(c.v) + ' &middot; ' + c.r + ' paper' + (c.r !== 1 ? 's' : '') + ' &middot; score ' + c.b + '</div>' +
+        '</div>' +
+        '<a class="claim-link" href="claim/' + c.id + '.html">view &rarr;</a>';
+      results.appendChild(div);
+    }
+    shown = end;
+    loadMore.style.display = shown < filtered.length ? "block" : "none";
+  }
+
+  function esc(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function shortName(v) {
+    const m = {"PhysicalMeasurement":"Physical","ClinicalObservation":"Clinical",
+      "Replicated":"Replicated","HumanCurated":"Curated","AIGenerated":"AI Generated",
+      "Hypothesis":"Hypothesis"};
+    return m[v] || v;
+  }
+})();
+</script>
+<footer>pCite — validation-weighted scientific claims</footer>
+</body>
+</html>

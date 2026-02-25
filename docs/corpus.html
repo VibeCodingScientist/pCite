@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corpus — pCite</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1><a href="index.html">pCite</a></h1>
+  <nav><a href="index.html">Search</a><a href="corpus.html">Corpus</a></nav>
+</header>
+
+<p class="section-label">METABOLOMICS KNOWLEDGE GRAPH</p>
+<hr class="section-rule">
+<div class="corpus-stat">Papers: <strong>1,266</strong></div>
+<div class="corpus-stat">Claims: <strong>8,098</strong> (unique assertions, deduplicated)</div>
+<div class="corpus-stat">Physical claims: <strong>0</strong> (MetaboLights deposit verified)</div>
+
+<p class="section-label">EXPERIMENT RESULTS</p>
+<hr class="section-rule">
+<p style="font-size:.9rem;margin-bottom:.75rem">
+  <em>Hypothesis: pCite surfaces physically-validated claims better than traditional citation count.</em>
+</p>
+<table class="id-table">
+  <tr><td>Mann-Whitney U</td><td>p = 8.78e-11 &nbsp; &#10003; significant</td></tr>
+  <tr><td>Precision@50</td><td>pCite 0.14 vs Traditional 0.14 (1.0&times; lift)</td></tr>
+  <tr><td>NDCG@50</td><td>pCite 1.00 vs Traditional 0.97</td></tr>
+</table>
+<p style="font-size:.9rem;margin-top:.5rem"><strong>Hypothesis holds.</strong></p>
+
+<p class="section-label">VALIDATION CLASS DISTRIBUTION</p>
+<hr class="section-rule">
+<div class="dist-row"><span class="dist-label">Replicated</span><span class="dist-bar" style="width:0px;background:#ff7f0e"></span><span class="dist-count">7 &nbsp; 0.1%</span></div>
+<div class="dist-row"><span class="dist-label">Curated</span><span class="dist-bar" style="width:200px;background:#2ca02c"></span><span class="dist-count">6,371 &nbsp; 78.7%</span></div>
+<div class="dist-row"><span class="dist-label">AI Generated</span><span class="dist-bar" style="width:54px;background:#aec7e8"></span><span class="dist-count">1,720 &nbsp; 21.2%</span></div>
+
+<p style="font-size:.85rem;color:#555;margin-top:.75rem;max-width:640px">
+  The distribution is the argument. 21% of extracted claims have
+  no physical anchor. Under traditional citation metrics, these
+  claims are indistinguishable from the 0.0% that do.
+</p>
+
+<p class="section-label">CODE &amp; DATA</p>
+<hr class="section-rule">
+<table class="id-table">
+  <tr><td>GitHub</td><td><a href="https://github.com/VibeCodingScientist/nCite">github.com/VibeCodingScientist/nCite</a></td></tr>
+  <tr><td>Data</td><td>CC0 &mdash; <a href="../data/claims.jsonl">download claims.jsonl</a></td></tr>
+</table>
+<footer>pCite — validation-weighted scientific claims</footer>
+</body>
+</html>
