@@ -1,5 +1,5 @@
 """
-ncite.corpus
+pcite.corpus
 
 MetaboLights-first corpus construction.
 Every study in MetaboLights has deposited instrument data, so Physical-tier
@@ -12,14 +12,14 @@ Pipeline:
   4. Add disease-focused PubMed papers for citation density
 
 Output: data/papers.jsonl
-Run:    python -m ncite.corpus
+Run:    python -m pcite.corpus
 """
 
 import asyncio, json, re, sys, urllib.parse
 from pathlib import Path
 import httpx
-from ncite.models import Paper
-from ncite import config
+from pcite.models import Paper
+from pcite import config
 
 PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_FETCH  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"

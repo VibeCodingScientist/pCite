@@ -10,7 +10,7 @@ from pathlib import Path
 import httpx
 
 OPENALEX = "https://api.openalex.org/works"
-MAILTO   = "ncite.framework@gmail.com"
+MAILTO   = "pcite.framework@gmail.com"
 CACHE_OUT = Path("data/citation_cache.json")
 sem = asyncio.Semaphore(3)
 
@@ -61,8 +61,8 @@ async def citing_dois(openalex_id: str, client: httpx.AsyncClient) -> list[str]:
 
 
 async def main():
-    from ncite.extract import load_claims
-    from ncite.models import Claim
+    from pcite.extract import load_claims
+    from pcite.models import Claim
 
     claims = load_claims()
     by_doi: dict[str, list[Claim]] = {}

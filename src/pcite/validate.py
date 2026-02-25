@@ -1,5 +1,5 @@
 """
-ncite.validate
+pcite.validate
 
 Two jobs:
   1. Upgrade ProvenanceEntry.validation_class based on checkable facts.
@@ -9,7 +9,7 @@ The classifier is a pure function — testable with no mocks, no network.
 Every rule has a comment explaining the epistemological reason.
 
 Output: data/claims.jsonl (updated) + data/nanopubs/*.trig
-Run:    python -m ncite.validate
+Run:    python -m pcite.validate
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from urllib.parse import quote
 import sys, rdflib
 from rdflib import RDF, XSD, Literal, Namespace, URIRef
 from rdflib.graph import ConjunctiveGraph
-from ncite.models import Claim, Paper, ProvenanceEntry, ValidationClass, VALIDATION_WEIGHT
+from pcite.models import Claim, Paper, ProvenanceEntry, ValidationClass, VALIDATION_WEIGHT
 
 
 def _safe_uri(url: str) -> URIRef:
@@ -33,7 +33,7 @@ NP   = Namespace("https://w3id.org/np/")
 NPX  = Namespace("http://purl.org/nanopub/x/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
 DCT  = Namespace("http://purl.org/dc/terms/")
-BASE = Namespace("https://ncite.org/np/")
+BASE = Namespace("https://pcite.org/np/")
 
 
 def classify_provenance(entry: ProvenanceEntry, papers: dict[str, Paper]) -> ProvenanceEntry:
@@ -122,13 +122,13 @@ def to_nanopub(claim: Claim) -> ConjunctiveGraph:
 
     pubinfo.add((base, DCT.created,
                  Literal(datetime.now(timezone.utc).isoformat(), datatype=XSD.dateTime)))
-    pubinfo.add((base, DCT.publisher, URIRef("https://ncite.org")))
+    pubinfo.add((base, DCT.publisher, URIRef("https://pcite.org")))
     return g
 
 
 def process_claims() -> int:
-    from ncite.corpus import load_papers
-    from ncite.extract import load_claims
+    from pcite.corpus import load_papers
+    from pcite.extract import load_claims
     papers, claims = {p.doi: p for p in load_papers()}, load_claims()
     NANOPUBS.mkdir(parents=True, exist_ok=True)
     upgraded = [upgrade_claim(c, papers) for c in claims]

@@ -1,4 +1,4 @@
-# nCite — Build Specification
+# pCite — Build Specification
 
 > *A validation-weighted citation framework that uses familiar researcher incentives
 > as the adoption mechanism for a measurement-first scientific knowledge graph.*
@@ -37,7 +37,7 @@ But researchers will not adopt a measurement registry. They will adopt a better 
 ### The Three Phases
 
 **Phase 1 — Trojan Horse**
-nCite presents as a smarter citation metric. Researchers see nCite scores and nH-index.
+pCite presents as a smarter citation metric. Researchers see pCite scores and nH-index.
 Journals see nIF. Institutions see nImpact. Every familiar incentive is preserved and
 enhanced. Under the hood, every claim traces to physical measurements. Nobody needs to
 know this yet. Adoption is driven entirely by self-interest.
@@ -127,11 +127,11 @@ No Docker. No cloud account. No service dependencies.
 ## Repository
 
 ```
-ncite/
+pcite/
 ├── pyproject.toml
 ├── README.md
 ├── run_poc.py                  ← orchestrator + CI test
-├── src/ncite/
+├── src/pcite/
 │   ├── __init__.py
 │   ├── models.py               ← shared contract, only cross-module import
 │   ├── corpus.py
@@ -156,7 +156,7 @@ ncite/
 
 ```toml
 [project]
-name = "ncite"
+name = "pcite"
 version = "0.1.0"
 description = "Validation-weighted citation framework for reproducible biomedical knowledge graphs"
 readme = "README.md"
@@ -181,7 +181,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ncite"]
+packages = ["src/pcite"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -220,7 +220,7 @@ Excellence here is measured by what you can remove, not what you add.
 3. Type hints on every signature
 4. No global mutable state
 5. Comments explain decisions, never operations
-6. `from ncite.models import ...` is the only cross-module import
+6. `from pcite.models import ...` is the only cross-module import
 
 ---
 
@@ -233,7 +233,7 @@ An hour correcting models.py before writing modules saves a week of refactoring 
 
 ```python
 """
-ncite.models — the shared contract
+pcite.models — the shared contract
 
 Three axioms encoded as design decisions:
 
@@ -293,19 +293,19 @@ class Predicate(str, Enum):
     TREATS           = "treats"
 
 
-class NCiteType(str, Enum):
+class PCiteType(str, Enum):
     SUPPORTS    = "supports"
     EXTENDS     = "extends"
     REPLICATES  = "replicates"   # explicit replication relationship — highest weight
     CONTRADICTS = "contradicts"
     APPLIES     = "applies"
 
-NCITE_WEIGHT: dict[NCiteType, float] = {
-    NCiteType.SUPPORTS:    1.0,
-    NCiteType.EXTENDS:     1.2,
-    NCiteType.REPLICATES:  1.5,  # replication earns more than novelty
-    NCiteType.CONTRADICTS: 0.8,  # counter-evidence still earns credit
-    NCiteType.APPLIES:     0.6,
+PCITE_WEIGHT: dict[PCiteType, float] = {
+    PCiteType.SUPPORTS:    1.0,
+    PCiteType.EXTENDS:     1.2,
+    PCiteType.REPLICATES:  1.5,  # replication earns more than novelty
+    PCiteType.CONTRADICTS: 0.8,  # counter-evidence still earns credit
+    PCiteType.APPLIES:     0.6,
 }
 
 
@@ -428,10 +428,10 @@ class Claim(BaseModel):
         return self.model_copy(update={"provenance": list(by_doi.values())})
 
 
-class NCite(BaseModel):
+class PCite(BaseModel):
     source_id:     str
     target_id:     str
-    type:          NCiteType
+    type:          PCiteType
     source_weight: float
 
     @computed_field
@@ -445,7 +445,7 @@ class NCite(BaseModel):
 
         4760× difference. No manual scoring. Entirely from the data model.
         """
-        return NCITE_WEIGHT[self.type] * self.source_weight
+        return PCITE_WEIGHT[self.type] * self.source_weight
 
 
 class Paper(BaseModel):
@@ -469,20 +469,20 @@ exists? — is the foundation of the validation system and Phase 3's first footh
 
 ```python
 """
-ncite.corpus
+pcite.corpus
 
 Fetch metabolomics papers from PubMed.
 Check each for MetaboLights / MassIVE raw data deposits.
 The deposit check is the Phase 3 measurement anchor embedded in Phase 1.
 
 Output: data/papers.jsonl
-Run:    python -m ncite.corpus
+Run:    python -m pcite.corpus
 """
 
 import asyncio, json, sys, urllib.parse
 from pathlib import Path
 import httpx
-from ncite.models import Paper
+from pcite.models import Paper
 
 PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_FETCH  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
@@ -583,20 +583,20 @@ becomes a structural fact for the first time.
 
 ```python
 """
-ncite.extract
+pcite.extract
 
 Paper text → structured Claims via Claude tool_use.
 The merge step collapses identical assertions across papers into one node.
 After this: len(claim.provenance) == replication count.
 
 Output: data/claims.jsonl (deduplicated)
-Run:    python -m ncite.extract
+Run:    python -m pcite.extract
 """
 
 import asyncio, functools, json, sys, urllib.request
 from pathlib import Path
 import anthropic
-from ncite.models import (
+from pcite.models import (
     Claim, Entity, Paper, Predicate, ProvenanceEntry,
     StatisticalQualifiers, ValidationClass,
 )
@@ -721,7 +721,7 @@ def _merge_all(claims: list[Claim]) -> list[Claim]:
 
 
 async def process_corpus() -> int:
-    from ncite.corpus import load_papers
+    from pcite.corpus import load_papers
     papers, all_claims = load_papers(), []
     for i in range(0, len(papers), 20):
         results = await asyncio.gather(*[_extract(p) for p in papers[i:i+20]])
@@ -760,7 +760,7 @@ work credibility in the semantic publishing community.
 
 ```python
 """
-ncite.validate
+pcite.validate
 
 Two jobs:
   1. Upgrade ProvenanceEntry.validation_class based on checkable facts.
@@ -770,7 +770,7 @@ The classifier is a pure function — testable with no mocks, no network.
 Every rule has a comment explaining the epistemological reason.
 
 Output: data/claims.jsonl (updated) + data/nanopubs/*.trig
-Run:    python -m ncite.validate
+Run:    python -m pcite.validate
 """
 
 from __future__ import annotations
@@ -779,7 +779,7 @@ from pathlib import Path
 import sys, rdflib
 from rdflib import RDF, XSD, Literal, Namespace, URIRef
 from rdflib.graph import ConjunctiveGraph
-from ncite.models import Claim, Paper, ProvenanceEntry, ValidationClass, VALIDATION_WEIGHT
+from pcite.models import Claim, Paper, ProvenanceEntry, ValidationClass, VALIDATION_WEIGHT
 
 DATA_CLAIMS = Path("data/claims.jsonl")
 NANOPUBS    = Path("data/nanopubs")
@@ -788,7 +788,7 @@ NP   = Namespace("https://w3id.org/np/")
 NPX  = Namespace("http://purl.org/nanopub/x/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
 DCT  = Namespace("http://purl.org/dc/terms/")
-BASE = Namespace("https://ncite.org/np/")
+BASE = Namespace("https://pcite.org/np/")
 
 
 def classify_provenance(entry: ProvenanceEntry, papers: dict[str, Paper]) -> ProvenanceEntry:
@@ -877,13 +877,13 @@ def to_nanopub(claim: Claim) -> ConjunctiveGraph:
 
     pubinfo.add((base, DCT.created,
                  Literal(datetime.now(timezone.utc).isoformat(), datatype=XSD.dateTime)))
-    pubinfo.add((base, DCT.publisher, URIRef("https://ncite.org")))
+    pubinfo.add((base, DCT.publisher, URIRef("https://pcite.org")))
     return g
 
 
 def process_claims() -> int:
-    from ncite.corpus import load_papers
-    from ncite.extract import load_claims
+    from pcite.corpus import load_papers
+    from pcite.extract import load_claims
     papers, claims = {p.doi: p for p in load_papers()}, load_claims()
     NANOPUBS.mkdir(parents=True, exist_ok=True)
     upgraded = [upgrade_claim(c, papers) for c in claims]
@@ -915,28 +915,28 @@ PHYSICAL if MetaboLights deposits were found in Milestone 1.
 
 ## Milestone 4 — Graph & Scoring
 
-Build the directed weighted graph, classify citation edges, compute nCite scores.
+Build the directed weighted graph, classify citation edges, compute pCite scores.
 The scoring formula is the paper's core scientific claim.
 
 ```python
 """
-ncite.graph
+pcite.graph
 
-Build nCite graph. Compute scores.
+Build pCite graph. Compute scores.
 
-nCite score = Σ (NCiteType.weight × source.base_weight) for all incoming edges
+pCite score = Σ (PCiteType.weight × source.base_weight) for all incoming edges
 base_weight = ValidationClass.weight × log₂(replication_count + 1)
 
 The formula is 5 lines. The scientific argument is in the constants.
 
 Output: data/graph.graphml + data/scores.jsonl
-Run:    python -m ncite.graph
+Run:    python -m pcite.graph
 """
 
 import asyncio, functools, json, sys
 from pathlib import Path
 import httpx, networkx as nx, anthropic
-from ncite.models import Claim, NCiteType, NCITE_WEIGHT
+from pcite.models import Claim, PCiteType, PCITE_WEIGHT
 
 GRAPH_OUT  = Path("data/graph.graphml")
 SCORES_OUT = Path("data/scores.jsonl")
@@ -966,7 +966,7 @@ async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
         try:
             resp = await client.get(OPENALEX, params={
                 "filter": f"cites:{doi}", "select": "doi",
-                "per-page": 50, "mailto": "research@ncite.org",
+                "per-page": 50, "mailto": "research@pcite.org",
             }, timeout=15)
             return [
                 w["doi"].replace("https://doi.org/", "")
@@ -977,7 +977,7 @@ async def _citing_dois(doi: str, client: httpx.AsyncClient) -> list[str]:
 
 
 @functools.lru_cache(maxsize=50_000)
-def _classify(src_text: str, tgt_text: str) -> NCiteType:
+def _classify(src_text: str, tgt_text: str) -> PCiteType:
     """
     Classify citation relationship. Claude Haiku — fast and cheap for single-word output.
     Cached: most claim pairs recur across the corpus.
@@ -990,14 +990,14 @@ def _classify(src_text: str, tgt_text: str) -> NCiteType:
             f"One word:\nsupports | extends | replicates | contradicts | applies"}]
     )
     word = resp.content[0].text.strip().lower().split()[0]
-    return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+    return PCiteType(word) if word in PCiteType._value2member_map_ else PCiteType.SUPPORTS
 
 
-def compute_ncite_scores(G: nx.DiGraph) -> dict[str, float]:
+def compute_pcite_scores(G: nx.DiGraph) -> dict[str, float]:
     """
-    nCite score = Σ incoming edge weights.
+    pCite score = Σ incoming edge weights.
 
-    weight per edge = NCiteType.weight × source.base_weight
+    weight per edge = PCiteType.weight × source.base_weight
     source.base_weight = ValidationClass.weight × log₂(replication_count + 1)
 
     Reading the graph structure is sufficient to compute trust.
@@ -1010,7 +1010,7 @@ def compute_ncite_scores(G: nx.DiGraph) -> dict[str, float]:
 
 
 async def build_full_graph() -> nx.DiGraph:
-    from ncite.extract import load_claims
+    from pcite.extract import load_claims
     claims = load_claims()
     by_doi: dict[str, list[Claim]] = {}
     for c in claims:
@@ -1039,20 +1039,20 @@ async def build_full_graph() -> nx.DiGraph:
                         f"{tgt.subject.name} {tgt.predicate.value} {tgt.object.name}",
                     )
                     G.add_edge(src.id, tgt.id, type=ntype.value,
-                               weight=NCITE_WEIGHT[ntype] * src.base_weight,
+                               weight=PCITE_WEIGHT[ntype] * src.base_weight,
                                source_weight=src.base_weight)
                     edges += 1
 
     print(f"  {edges} edges", file=sys.stderr)
-    scores = compute_ncite_scores(G)
-    nx.set_node_attributes(G, scores, "ncite_score")
+    scores = compute_pcite_scores(G)
+    nx.set_node_attributes(G, scores, "pcite_score")
     nx.write_graphml(G, GRAPH_OUT)
 
     with SCORES_OUT.open("w") as f:
         for c in claims:
             f.write(json.dumps({
                 "claim_id":          c.id,
-                "ncite_score":       scores.get(c.id, 0.0),
+                "pcite_score":       scores.get(c.id, 0.0),
                 "validation_class":  c.validation_class.value,
                 "replication_count": c.replication_count,
                 "base_weight":       c.base_weight,
@@ -1069,14 +1069,14 @@ if __name__ == "__main__":
 ```
 
 **Milestone 4 complete when:** `data/scores.jsonl` exists. Inspect the top-10 claims
-by nCite score manually. They should be biologically sensible — well-known metabolomics
+by pCite score manually. They should be biologically sensible — well-known metabolomics
 findings appearing in multiple papers. If not, the extraction or merge is wrong.
 
 ---
 
 ## Milestone 5 — Evaluation
 
-Three statistical tests measuring whether nCite surfaces physically-validated claims
+Three statistical tests measuring whether pCite surfaces physically-validated claims
 better than traditional citation counts. All three must agree.
 
 **Ground truth:** `ValidationClass.PHYSICAL` claims — self-selected via MetaboLights
@@ -1084,13 +1084,13 @@ deposits. As objectively validated as metabolomics claims can be.
 
 ```python
 """
-ncite.evaluate
+pcite.evaluate
 
-Three tests, all measuring whether nCite surfaces physically-validated claims
+Three tests, all measuring whether pCite surfaces physically-validated claims
 better than traditional citation count. They must agree. If they don't: debug.
 
 Output: data/results.json + figures/*.pdf
-Run:    python -m ncite.evaluate
+Run:    python -m pcite.evaluate
 """
 
 import json, math, sys
@@ -1126,8 +1126,8 @@ def load_scores() -> list[dict]:
 
 def mann_whitney(records: list[dict]) -> dict:
     """Non-parametric. No distribution assumption. One-sided."""
-    val   = [r["ncite_score"] for r in records if r["validation_class"] == "PhysicalMeasurement"]
-    unval = [r["ncite_score"] for r in records if r["validation_class"] != "PhysicalMeasurement"]
+    val   = [r["pcite_score"] for r in records if r["validation_class"] == "PhysicalMeasurement"]
+    unval = [r["pcite_score"] for r in records if r["validation_class"] != "PhysicalMeasurement"]
     u, p  = stats.mannwhitneyu(val, unval, alternative="greater")
     return {"u": u, "p_value": p, "n_validated": len(val), "n_unvalidated": len(unval),
             "median_validated":   float(sorted(val)[len(val)//2]) if val else 0,
@@ -1137,11 +1137,11 @@ def mann_whitney(records: list[dict]) -> dict:
 def precision_at_k(records: list[dict], k: int = 50) -> dict:
     """What fraction of the top-k are physically validated?"""
     validated = {r["claim_id"] for r in records if r["validation_class"] == "PhysicalMeasurement"}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
+    nc = sorted(records, key=lambda r: r["pcite_score"], reverse=True)
     tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
     p_nc = sum(1 for r in nc[:k] if r["claim_id"] in validated) / k
     p_tr = sum(1 for r in tr[:k] if r["claim_id"] in validated) / k
-    return {"k": k, "precision_ncite": p_nc, "precision_traditional": p_tr,
+    return {"k": k, "precision_pcite": p_nc, "precision_traditional": p_tr,
             "lift": p_nc / p_tr if p_tr > 0 else float("inf")}
 
 
@@ -1159,19 +1159,19 @@ def ndcg_at_k(records: list[dict], k: int = 50) -> dict:
                    reverse=True)
     idcg  = dcg(ideal)
     if idcg == 0:
-        return {"k": k, "ndcg_ncite": 0.0, "ndcg_traditional": 0.0}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
+        return {"k": k, "ndcg_pcite": 0.0, "ndcg_traditional": 0.0}
+    nc = sorted(records, key=lambda r: r["pcite_score"], reverse=True)
     tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
-    return {"k": k, "ndcg_ncite": dcg(nc) / idcg, "ndcg_traditional": dcg(tr) / idcg}
+    return {"k": k, "ndcg_pcite": dcg(nc) / idcg, "ndcg_traditional": dcg(tr) / idcg}
 
 
 def fig1_rank_scatter(records: list[dict]) -> plt.Figure:
     """
-    x = traditional rank, y = nCite rank, colour = validation class.
+    x = traditional rank, y = pCite rank, colour = validation class.
     Physical claims should cluster top-left. This is the paper's hero figure.
     """
     nc = {r["claim_id"]: i+1 for i, r in enumerate(
-        sorted(records, key=lambda r: r["ncite_score"], reverse=True))}
+        sorted(records, key=lambda r: r["pcite_score"], reverse=True))}
     tr = {r["claim_id"]: i+1 for i, r in enumerate(
         sorted(records, key=lambda r: r.get("traditional_citations",0), reverse=True))}
     fig, ax = plt.subplots(figsize=(7, 6))
@@ -1182,8 +1182,8 @@ def fig1_rank_scatter(records: list[dict]) -> plt.Figure:
                    c=color, label=vc, alpha=0.5, s=10, linewidths=0)
     n = len(records)
     ax.plot([1, n], [1, n], "k--", lw=0.8, alpha=0.3, label="No change")
-    ax.set(xlabel="Traditional citation rank", ylabel="nCite rank",
-           title="nCite vs traditional ranking")
+    ax.set(xlabel="Traditional citation rank", ylabel="pCite rank",
+           title="pCite vs traditional ranking")
     ax.legend(fontsize=8, markerscale=2, loc="lower right")
     for axis in [ax.xaxis, ax.yaxis]:
         axis.set_major_formatter(mtick.FuncFormatter(lambda x, _: f"{int(x):,}"))
@@ -1192,28 +1192,28 @@ def fig1_rank_scatter(records: list[dict]) -> plt.Figure:
 
 
 def fig2_score_distribution(records: list[dict]) -> plt.Figure:
-    """nCite score by validation class. Physical should be dramatically higher."""
+    """pCite score by validation class. Physical should be dramatically higher."""
     classes = ["PhysicalMeasurement", "Replicated", "HumanCurated", "AIGenerated"]
-    data    = [[r["ncite_score"] for r in records if r["validation_class"] == vc] for vc in classes]
+    data    = [[r["pcite_score"] for r in records if r["validation_class"] == vc] for vc in classes]
     fig, ax = plt.subplots(figsize=(7, 5))
     bp = ax.boxplot(data, labels=["Physical","Replicated","Curated","AI"],
                     patch_artist=True, showfliers=False)
     for patch, vc in zip(bp["boxes"], classes):
         patch.set(facecolor=COLORS[vc], alpha=0.7)
-    ax.set(ylabel="nCite score", title="nCite score by validation class")
+    ax.set(ylabel="pCite score", title="pCite score by validation class")
     fig.tight_layout()
     return fig
 
 
 def fig3_precision_curve(records: list[dict]) -> plt.Figure:
-    """Precision@k for k = 10…200. nCite should stay above traditional throughout."""
+    """Precision@k for k = 10…200. pCite should stay above traditional throughout."""
     validated = {r["claim_id"] for r in records if r["validation_class"] == "PhysicalMeasurement"}
-    nc = sorted(records, key=lambda r: r["ncite_score"], reverse=True)
+    nc = sorted(records, key=lambda r: r["pcite_score"], reverse=True)
     tr = sorted(records, key=lambda r: r.get("traditional_citations", 0), reverse=True)
     ks = list(range(10, min(201, len(records)), 10))
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.plot(ks, [sum(1 for r in nc[:k] if r["claim_id"] in validated)/k for k in ks],
-            "-o", ms=4, color=COLORS["PhysicalMeasurement"], label="nCite")
+            "-o", ms=4, color=COLORS["PhysicalMeasurement"], label="pCite")
     ax.plot(ks, [sum(1 for r in tr[:k] if r["claim_id"] in validated)/k for k in ks],
             "-s", ms=4, color=COLORS["AIGenerated"], label="Traditional")
     ax.axhline(len(validated)/len(records), ls="--", color="gray", lw=0.8, label="Random")
@@ -1249,16 +1249,16 @@ if __name__ == "__main__":
     print(f"\n{'─'*55}", file=sys.stderr)
     print(f"  Mann-Whitney p:  {mw['p_value']:.4f}  "
           f"{'✓' if mw['p_value'] < 0.05 else '✗'}", file=sys.stderr)
-    print(f"  Precision@50:    nCite={p50['precision_ncite']:.3f}  "
+    print(f"  Precision@50:    pCite={p50['precision_pcite']:.3f}  "
           f"trad={p50['precision_traditional']:.3f}  "
           f"lift={p50['lift']:.1f}×", file=sys.stderr)
-    print(f"  NDCG@50:         nCite={ng['ndcg_ncite']:.4f}  "
+    print(f"  NDCG@50:         pCite={ng['ndcg_pcite']:.4f}  "
           f"trad={ng['ndcg_traditional']:.4f}", file=sys.stderr)
     print(f"{'─'*55}", file=sys.stderr)
 ```
 
-**Milestone 5 complete when:** All three tests show nCite outperforming traditional
-citations and agree with each other. If they disagree, there is a data bug. If nCite
+**Milestone 5 complete when:** All three tests show pCite outperforming traditional
+citations and agree with each other. If they disagree, there is a data bug. If pCite
 loses on all three, revisit whether MetaboLights deposits are correctly propagating
 through to edge weights.
 
@@ -1280,11 +1280,11 @@ Usage:
 """
 
 import asyncio, sys, argparse
-from ncite import corpus, extract, validate, graph, evaluate
+from pcite import corpus, extract, validate, graph, evaluate
 
 
 async def main(dry_run: bool = False) -> int:
-    print("\nnCite PoC — Validation-Weighted Citation Graph for Metabolomics\n")
+    print("\npCite PoC — Validation-Weighted Citation Graph for Metabolomics\n")
 
     if not dry_run:
         print("1/5  Corpus (PubMed + MetaboLights)...")
@@ -1296,7 +1296,7 @@ async def main(dry_run: bool = False) -> int:
         print("3/5  Validation + nanopublications...")
         print(f"     {validate.process_claims()} claims classified\n")
 
-        print("4/5  nCite graph (OpenAlex + Claude Haiku)...")
+        print("4/5  pCite graph (OpenAlex + Claude Haiku)...")
         G = await graph.build_full_graph()
         print(f"     {G.number_of_nodes()} nodes, {G.number_of_edges()} edges\n")
 
@@ -1311,16 +1311,16 @@ async def main(dry_run: bool = False) -> int:
     print(f"  n validated:      {mw['n_validated']:,}")
     print(f"  Mann-Whitney p:   {mw['p_value']:.4f}   "
           f"{'✓' if mw['p_value'] < 0.05 else '✗'}")
-    print(f"  Precision@50:     {p50['precision_ncite']:.3f} vs "
+    print(f"  Precision@50:     {p50['precision_pcite']:.3f} vs "
           f"{p50['precision_traditional']:.3f}  ({p50['lift']:.1f}× lift)")
-    print(f"  NDCG@50:          {ng['ndcg_ncite']:.4f} vs "
+    print(f"  NDCG@50:          {ng['ndcg_pcite']:.4f} vs "
           f"{ng['ndcg_traditional']:.4f}")
     print(f"{'━'*55}\n")
 
     holds = (
         mw["p_value"] < 0.05
         and p50["lift"] > 1.0
-        and ng["ndcg_ncite"] > ng["ndcg_traditional"]
+        and ng["ndcg_pcite"] > ng["ndcg_traditional"]
     )
     print("✓ Hypothesis holds.\n" if holds else "✗ Hypothesis did not hold.\n")
     return 0 if holds else 1
@@ -1343,9 +1343,9 @@ of every function in the system.
 """tests/test_all.py"""
 
 import pytest
-from ncite.models import (
-    Claim, Entity, NCite, NCiteType, Paper, Predicate, ProvenanceEntry,
-    StatisticalQualifiers, ValidationClass, VALIDATION_WEIGHT, NCITE_WEIGHT,
+from pcite.models import (
+    Claim, Entity, PCite, PCiteType, Paper, Predicate, ProvenanceEntry,
+    StatisticalQualifiers, ValidationClass, VALIDATION_WEIGHT, PCITE_WEIGHT,
 )
 
 
@@ -1424,38 +1424,38 @@ def test_physical_is_highest():
 def test_hypothesis_is_zero():
     assert VALIDATION_WEIGHT[ValidationClass.HYPOTHESIS] == 0.0
 
-def test_replication_ncite_is_highest():
-    assert NCITE_WEIGHT[NCiteType.REPLICATES] == max(NCITE_WEIGHT.values())
+def test_replication_pcite_is_highest():
+    assert PCITE_WEIGHT[PCiteType.REPLICATES] == max(PCITE_WEIGHT.values())
 
 def test_edge_weight_formula():
-    n = NCite(source_id="a", target_id="b", type=NCiteType.REPLICATES, source_weight=5.0)
+    n = PCite(source_id="a", target_id="b", type=PCiteType.REPLICATES, source_weight=5.0)
     assert n.weight == pytest.approx(7.5)
 
 
 # Validate: pure function tests (no network)
 
 def test_metabo_deposit_upgrades_to_physical():
-    from ncite.validate import classify_provenance
+    from pcite.validate import classify_provenance
     paper = Paper(doi="10.1000/x", title="T", abstract="A", metabo_id="MTBLS123")
     entry = ProvenanceEntry(doi="10.1000/x")
     assert classify_provenance(entry, {"10.1000/x": paper}).validation_class \
            == ValidationClass.PHYSICAL
 
 def test_abstract_upgrades_to_curated():
-    from ncite.validate import classify_provenance
+    from pcite.validate import classify_provenance
     paper = Paper(doi="10.1000/x", title="T", abstract="A")
     entry = ProvenanceEntry(doi="10.1000/x")
     assert classify_provenance(entry, {"10.1000/x": paper}).validation_class \
            == ValidationClass.CURATED
 
 def test_three_curated_become_replicated():
-    from ncite.validate import upgrade_claim
+    from pcite.validate import upgrade_claim
     c      = claim("10.1000/a").merge(claim("10.1000/b")).merge(claim("10.1000/c"))
     papers = {p.doi: Paper(doi=p.doi, title="T", abstract="A") for p in c.provenance}
     assert upgrade_claim(c, papers).validation_class == ValidationClass.REPLICATED
 
 def test_two_curated_stay_curated():
-    from ncite.validate import upgrade_claim
+    from pcite.validate import upgrade_claim
     c      = claim("10.1000/a").merge(claim("10.1000/b"))
     papers = {p.doi: Paper(doi=p.doi, title="T", abstract="A") for p in c.provenance}
     assert upgrade_claim(c, papers).validation_class == ValidationClass.CURATED
@@ -1465,36 +1465,36 @@ def test_two_curated_stay_curated():
 
 def test_isolated_node_scores_zero():
     import networkx as nx
-    from ncite.graph import compute_ncite_scores
+    from pcite.graph import compute_pcite_scores
     G = nx.DiGraph()
     G.add_node("a")
-    assert compute_ncite_scores(G)["a"] == 0.0
+    assert compute_pcite_scores(G)["a"] == 0.0
 
 def test_score_sums_incoming_weights():
     import networkx as nx
-    from ncite.graph import compute_ncite_scores
+    from pcite.graph import compute_pcite_scores
     G = nx.DiGraph()
     for n in ["a","b","c"]: G.add_node(n)
     G.add_edge("b", "a", weight=2.0)
     G.add_edge("c", "a", weight=3.0)
-    assert compute_ncite_scores(G)["a"] == pytest.approx(5.0)
+    assert compute_pcite_scores(G)["a"] == pytest.approx(5.0)
 
 
 # Evaluate: metrics
 
 def test_ndcg_perfect_ranking():
-    from ncite.evaluate import ndcg_at_k
+    from pcite.evaluate import ndcg_at_k
     records = [{"claim_id": str(i), "validation_class": "PhysicalMeasurement",
-                "ncite_score": float(10-i)} for i in range(10)]
-    assert ndcg_at_k(records, k=10)["ndcg_ncite"] == pytest.approx(1.0)
+                "pcite_score": float(10-i)} for i in range(10)]
+    assert ndcg_at_k(records, k=10)["ndcg_pcite"] == pytest.approx(1.0)
 
 def test_precision_in_range():
-    from ncite.evaluate import precision_at_k
+    from pcite.evaluate import precision_at_k
     records = [{"claim_id": str(i),
                 "validation_class": "PhysicalMeasurement" if i < 10 else "AIGenerated",
-                "ncite_score": float(i)} for i in range(100)]
+                "pcite_score": float(i)} for i in range(100)]
     r = precision_at_k(records, k=10)
-    assert 0.0 <= r["precision_ncite"] <= 1.0
+    assert 0.0 <= r["precision_pcite"] <= 1.0
 ```
 
 ---
@@ -1550,7 +1550,7 @@ The proprietary layer is what the company sells. They do not conflict.
 
 `python run_poc.py` exits 0.
 
-The four result lines print. All three tests agree. The top-10 claims by nCite score
+The four result lines print. All three tests agree. The top-10 claims by pCite score
 are biologically sensible. A reviewer who clones the repo and runs `uv sync &&
 python run_poc.py --dry-run` sees the same figures submitted with the paper.
 

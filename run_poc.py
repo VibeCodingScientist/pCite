@@ -11,11 +11,11 @@ Usage:
 """
 
 import asyncio, sys, argparse
-from ncite import corpus, extract, validate, graph, evaluate
+from pcite import corpus, extract, validate, graph, evaluate
 
 
 async def main(dry_run: bool = False) -> int:
-    print("\nnCite PoC — Validation-Weighted Citation Graph for Metabolomics\n")
+    print("\npCite PoC — Validation-Weighted Citation Graph for Metabolomics\n")
 
     if not dry_run:
         print("1/5  Corpus (MetaboLights-first + PubMed disease cluster)...")
@@ -27,7 +27,7 @@ async def main(dry_run: bool = False) -> int:
         print("3/5  Validation + nanopublications...")
         print(f"     {validate.process_claims()} claims classified\n")
 
-        print("4/5  nCite graph (OpenAlex + Claude Sonnet)...")
+        print("4/5  pCite graph (OpenAlex + Claude Sonnet)...")
         G = await graph.build_full_graph()
         print(f"     {G.number_of_nodes()} nodes, {G.number_of_edges()} edges\n")
 
@@ -42,16 +42,16 @@ async def main(dry_run: bool = False) -> int:
     print(f"  n validated:      {mw['n_validated']:,}")
     print(f"  Mann-Whitney p:   {mw['p_value']:.4f}   "
           f"{'PASS' if mw['p_value'] < 0.05 else 'FAIL'}")
-    print(f"  Precision@50:     {p50['precision_ncite']:.3f} vs "
+    print(f"  Precision@50:     {p50['precision_pcite']:.3f} vs "
           f"{p50['precision_traditional']:.3f}  ({p50['lift']:.1f}x lift)")
-    print(f"  NDCG@50:          {ng['ndcg_ncite']:.4f} vs "
+    print(f"  NDCG@50:          {ng['ndcg_pcite']:.4f} vs "
           f"{ng['ndcg_traditional']:.4f}")
     print(f"{'='*55}\n")
 
     holds = (
         mw["p_value"] < 0.05
         and p50["lift"] >= 1.0
-        and ng["ndcg_ncite"] > ng["ndcg_traditional"]
+        and ng["ndcg_pcite"] > ng["ndcg_traditional"]
     )
     print("PASS: Hypothesis holds.\n" if holds else "FAIL: Hypothesis did not hold.\n")
     return 0 if holds else 1

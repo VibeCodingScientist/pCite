@@ -132,8 +132,8 @@ def _footer():
 
 
 def _score_val(score_data):
-    """Use ncite_score when non-zero, fall back to base_weight."""
-    ns = score_data.get("ncite_score", 0)
+    """Use pcite_score when non-zero, fall back to base_weight."""
+    ns = score_data.get("pcite_score", 0)
     return ns if ns > 0 else score_data.get("base_weight", 0)
 
 
@@ -422,10 +422,10 @@ def render_corpus(claims, scores_by_id, results):
     p_str = f"{p_val:.2e}" if p_val < 0.01 else f"{p_val:.4f}"
     sig = "significant" if p_val < 0.05 else "not significant"
 
-    p_nc = p50.get("precision_ncite", 0)
+    p_nc = p50.get("precision_pcite", 0)
     p_tr = p50.get("precision_traditional", 0)
     lift = p50.get("lift", 0)
-    ndcg_nc = ng.get("ndcg_ncite", 0)
+    ndcg_nc = ng.get("ndcg_pcite", 0)
     ndcg_tr = ng.get("ndcg_traditional", 0)
 
     # Validation class distribution bars
@@ -482,7 +482,7 @@ def render_corpus(claims, scores_by_id, results):
 <p class="section-label">CODE &amp; DATA</p>
 <hr class="section-rule">
 <table class="id-table">
-  <tr><td>GitHub</td><td><a href="https://github.com/VibeCodingScientist/nCite">github.com/VibeCodingScientist/nCite</a></td></tr>
+  <tr><td>GitHub</td><td><a href="https://github.com/VibeCodingScientist/pCite">github.com/VibeCodingScientist/pCite</a></td></tr>
   <tr><td>Data</td><td>CC0 &mdash; <a href="../data/claims.jsonl">download claims.jsonl</a></td></tr>
 </table>
 """ + _footer()

@@ -1,5 +1,5 @@
 """
-ncite.config
+pcite.config
 
 Centralized configuration loaded from environment variables.
 Validates required keys at import time — fail fast, not at first API call.
@@ -17,7 +17,7 @@ ANTHROPIC_API_KEY: str = os.environ.get("ANTHROPIC_API_KEY", "")
 
 # ── Optional ──────────────────────────────────────────────────────────
 NCBI_API_KEY: str | None = os.environ.get("NCBI_API_KEY") or None
-OPENALEX_EMAIL: str = os.environ.get("OPENALEX_EMAIL", "research@ncite.org")
+OPENALEX_EMAIL: str = os.environ.get("OPENALEX_EMAIL", "research@pcite.org")
 CLAUDE_MODEL: str = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")

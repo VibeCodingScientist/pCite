@@ -11,14 +11,14 @@
   },
   "precision_50": {
     "k": 50,
-    "precision_ncite": 0.92,
+    "precision_pcite": 0.92,
     "precision_traditional": 0.5,
     "lift": 1.84,
-    "score_key": "ncite_score"
+    "score_key": "pcite_score"
   },
   "ndcg_50": {
     "k": 50,
-    "ndcg_ncite": 0.9169268461991034,
+    "ndcg_pcite": 0.9169268461991034,
     "ndcg_traditional": 0.5966587544072053
   }
 }
