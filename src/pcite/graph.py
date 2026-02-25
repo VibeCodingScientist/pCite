@@ -1,23 +1,23 @@
 """
-ncite.graph
+pcite.graph
 
-Build nCite graph. Compute scores.
+Build pCite graph. Compute scores.
 
-nCite score = Σ (NCiteType.weight × source.base_weight) for all incoming edges
+pCite score = Σ (PCiteType.weight × source.base_weight) for all incoming edges
 base_weight = ValidationClass.weight × log₂(replication_count + 1)
 
 The formula is 5 lines. The scientific argument is in the constants.
 
 Output: data/graph.graphml + data/scores.jsonl
-Run:    python -m ncite.graph
+Run:    python -m pcite.graph
 """
 
 import asyncio, functools, json, sys, time
 from pathlib import Path
 import httpx, networkx as nx
 from google import genai
-from ncite.models import Claim, NCiteType, NCITE_WEIGHT
-from ncite import config
+from pcite.models import Claim, PCiteType, PCITE_WEIGHT
+from pcite import config
 
 GRAPH_OUT       = Path("data/graph.graphml")
 SCORES_OUT      = Path("data/scores.jsonl")
@@ -113,7 +113,7 @@ _disk_cache: dict[str, str] = {}
 
 
 @functools.lru_cache(maxsize=50_000)
-def _classify(src_text: str, tgt_text: str) -> NCiteType:
+def _classify(src_text: str, tgt_text: str) -> PCiteType:
     """
     Classify citation relationship via Gemini Flash.
     Cached in memory (lru_cache) and on disk (classify_cache.json).
@@ -122,7 +122,7 @@ def _classify(src_text: str, tgt_text: str) -> NCiteType:
     key = f"{src_text}||{tgt_text}"
     if key in _disk_cache:
         word = _disk_cache[key]
-        return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+        return PCiteType(word) if word in PCiteType._value2member_map_ else PCiteType.SUPPORTS
 
     for attempt in range(5):
         try:
@@ -138,7 +138,7 @@ def _classify(src_text: str, tgt_text: str) -> NCiteType:
             )
             word = resp.text.strip().lower().strip("*").split()[0].strip("*")
             _disk_cache[key] = word
-            return NCiteType(word) if word in NCiteType._value2member_map_ else NCiteType.SUPPORTS
+            return PCiteType(word) if word in PCiteType._value2member_map_ else PCiteType.SUPPORTS
         except Exception as e:
             wait = 2 ** attempt
             print(f"  classify retry {attempt+1}/5 ({e}), waiting {wait}s",
@@ -148,14 +148,14 @@ def _classify(src_text: str, tgt_text: str) -> NCiteType:
     print(f"  classify failed after 5 retries, defaulting to SUPPORTS",
           file=sys.stderr)
     _disk_cache[key] = "supports"
-    return NCiteType.SUPPORTS
+    return PCiteType.SUPPORTS
 
 
-def compute_ncite_scores(G: nx.DiGraph) -> dict[str, float]:
+def compute_pcite_scores(G: nx.DiGraph) -> dict[str, float]:
     """
-    nCite score = Σ incoming edge weights.
+    pCite score = Σ incoming edge weights.
 
-    weight per edge = NCiteType.weight × source.base_weight
+    weight per edge = PCiteType.weight × source.base_weight
     source.base_weight = ValidationClass.weight × log₂(replication_count + 1)
 
     Reading the graph structure is sufficient to compute trust.
@@ -168,7 +168,7 @@ def compute_ncite_scores(G: nx.DiGraph) -> dict[str, float]:
 
 
 async def build_full_graph() -> nx.DiGraph:
-    from ncite.extract import load_claims
+    from pcite.extract import load_claims
     claims = load_claims()
     by_doi: dict[str, list[Claim]] = {}
     for c in claims:
@@ -236,7 +236,7 @@ async def build_full_graph() -> nx.DiGraph:
             f"{tgt.subject.name} {tgt.predicate.value} {tgt.object.name}",
         )
         G.add_edge(src.id, tgt.id, type=ntype.value,
-                   weight=NCITE_WEIGHT[ntype] * src.base_weight,
+                   weight=PCITE_WEIGHT[ntype] * src.base_weight,
                    source_weight=src.base_weight)
         edges += 1
         if (i + 1) % 50 == 0 or (i + 1) == total:
@@ -244,15 +244,15 @@ async def build_full_graph() -> nx.DiGraph:
             _save_classify_cache(_disk_cache)
 
     print(f"  {edges} edges added", file=sys.stderr)
-    scores = compute_ncite_scores(G)
-    nx.set_node_attributes(G, scores, "ncite_score")
+    scores = compute_pcite_scores(G)
+    nx.set_node_attributes(G, scores, "pcite_score")
     nx.write_graphml(G, GRAPH_OUT)
 
     with SCORES_OUT.open("w") as f:
         for c in claims:
             f.write(json.dumps({
                 "claim_id":          c.id,
-                "ncite_score":       scores.get(c.id, 0.0),
+                "pcite_score":       scores.get(c.id, 0.0),
                 "validation_class":  c.validation_class.value,
                 "replication_count": c.replication_count,
                 "base_weight":       c.base_weight,

@@ -1,22 +1,22 @@
 """
-ncite.extract
+pcite.extract
 
 Paper text -> structured Claims via Claude tool_use.
 The merge step collapses identical assertions across papers into one node.
 After this: len(claim.provenance) == replication count.
 
 Output: data/claims.jsonl (deduplicated)
-Run:    python -m ncite.extract
+Run:    python -m pcite.extract
 """
 
 import asyncio, functools, json, sys, urllib.request, urllib.parse
 from pathlib import Path
 import anthropic
-from ncite.models import (
+from pcite.models import (
     Claim, Entity, Paper, Predicate, ProvenanceEntry,
     StatisticalQualifiers, ValidationClass,
 )
-from ncite import config
+from pcite import config
 
 DATA_OUT = Path("data/claims.jsonl")
 _client: anthropic.AsyncAnthropic | None = None
@@ -156,7 +156,7 @@ def _merge_all(claims: list[Claim]) -> list[Claim]:
 
 
 async def process_corpus() -> int:
-    from ncite.corpus import load_papers
+    from pcite.corpus import load_papers
     papers, all_claims = load_papers(), []
     for i in range(0, len(papers), 20):
         results = await asyncio.gather(*[_extract(p) for p in papers[i:i+20]])

@@ -1,9 +1,9 @@
 """tests/test_all.py"""
 
 import pytest
-from ncite.models import (
-    Claim, Entity, NCite, NCiteType, Paper, Predicate, ProvenanceEntry,
-    StatisticalQualifiers, ValidationClass, VALIDATION_WEIGHT, NCITE_WEIGHT,
+from pcite.models import (
+    Claim, Entity, PCite, PCiteType, Paper, Predicate, ProvenanceEntry,
+    StatisticalQualifiers, ValidationClass, VALIDATION_WEIGHT, PCITE_WEIGHT,
 )
 
 
@@ -82,38 +82,38 @@ def test_physical_is_highest():
 def test_hypothesis_is_zero():
     assert VALIDATION_WEIGHT[ValidationClass.HYPOTHESIS] == 0.0
 
-def test_replication_ncite_is_highest():
-    assert NCITE_WEIGHT[NCiteType.REPLICATES] == max(NCITE_WEIGHT.values())
+def test_replication_pcite_is_highest():
+    assert PCITE_WEIGHT[PCiteType.REPLICATES] == max(PCITE_WEIGHT.values())
 
 def test_edge_weight_formula():
-    n = NCite(source_id="a", target_id="b", type=NCiteType.REPLICATES, source_weight=5.0)
+    n = PCite(source_id="a", target_id="b", type=PCiteType.REPLICATES, source_weight=5.0)
     assert n.weight == pytest.approx(7.5)
 
 
 # Validate: pure function tests (no network)
 
 def test_metabo_deposit_upgrades_to_physical():
-    from ncite.validate import classify_provenance
+    from pcite.validate import classify_provenance
     paper = Paper(doi="10.1000/x", title="T", abstract="A", metabo_id="MTBLS123")
     entry = ProvenanceEntry(doi="10.1000/x")
     assert classify_provenance(entry, {"10.1000/x": paper}).validation_class \
            == ValidationClass.PHYSICAL
 
 def test_abstract_upgrades_to_curated():
-    from ncite.validate import classify_provenance
+    from pcite.validate import classify_provenance
     paper = Paper(doi="10.1000/x", title="T", abstract="A")
     entry = ProvenanceEntry(doi="10.1000/x")
     assert classify_provenance(entry, {"10.1000/x": paper}).validation_class \
            == ValidationClass.CURATED
 
 def test_three_curated_become_replicated():
-    from ncite.validate import upgrade_claim
+    from pcite.validate import upgrade_claim
     c      = claim("10.1000/a").merge(claim("10.1000/b")).merge(claim("10.1000/c"))
     papers = {p.doi: Paper(doi=p.doi, title="T", abstract="A") for p in c.provenance}
     assert upgrade_claim(c, papers).validation_class == ValidationClass.REPLICATED
 
 def test_two_curated_stay_curated():
-    from ncite.validate import upgrade_claim
+    from pcite.validate import upgrade_claim
     c      = claim("10.1000/a").merge(claim("10.1000/b"))
     papers = {p.doi: Paper(doi=p.doi, title="T", abstract="A") for p in c.provenance}
     assert upgrade_claim(c, papers).validation_class == ValidationClass.CURATED
@@ -123,33 +123,33 @@ def test_two_curated_stay_curated():
 
 def test_isolated_node_scores_zero():
     import networkx as nx
-    from ncite.graph import compute_ncite_scores
+    from pcite.graph import compute_pcite_scores
     G = nx.DiGraph()
     G.add_node("a")
-    assert compute_ncite_scores(G)["a"] == 0.0
+    assert compute_pcite_scores(G)["a"] == 0.0
 
 def test_score_sums_incoming_weights():
     import networkx as nx
-    from ncite.graph import compute_ncite_scores
+    from pcite.graph import compute_pcite_scores
     G = nx.DiGraph()
     for n in ["a","b","c"]: G.add_node(n)
     G.add_edge("b", "a", weight=2.0)
     G.add_edge("c", "a", weight=3.0)
-    assert compute_ncite_scores(G)["a"] == pytest.approx(5.0)
+    assert compute_pcite_scores(G)["a"] == pytest.approx(5.0)
 
 
 # Evaluate: metrics
 
 def test_ndcg_perfect_ranking():
-    from ncite.evaluate import ndcg_at_k
+    from pcite.evaluate import ndcg_at_k
     records = [{"claim_id": str(i), "validation_class": "PhysicalMeasurement",
-                "ncite_score": float(10-i)} for i in range(10)]
-    assert ndcg_at_k(records, k=10)["ndcg_ncite"] == pytest.approx(1.0)
+                "pcite_score": float(10-i)} for i in range(10)]
+    assert ndcg_at_k(records, k=10)["ndcg_pcite"] == pytest.approx(1.0)
 
 def test_precision_in_range():
-    from ncite.evaluate import precision_at_k
+    from pcite.evaluate import precision_at_k
     records = [{"claim_id": str(i),
                 "validation_class": "PhysicalMeasurement" if i < 10 else "AIGenerated",
-                "ncite_score": float(i)} for i in range(100)]
+                "pcite_score": float(i)} for i in range(100)]
     r = precision_at_k(records, k=10)
-    assert 0.0 <= r["precision_ncite"] <= 1.0
+    assert 0.0 <= r["precision_pcite"] <= 1.0

@@ -1,4 +1,4 @@
-# nCite
+# pCite
 
 Validation-weighted citation framework for reproducible biomedical knowledge graphs.
 
@@ -6,13 +6,13 @@ Validation-weighted citation framework for reproducible biomedical knowledge gra
 
 Run 3 corpus: 8,761 claims from 1,287 papers, 5,495 Physical-tier (MetaboLights-verified), 30,759 citation edges.
 
-| Metric | nCite | Traditional | |
+| Metric | pCite | Traditional | |
 |---|---|---|---|
 | Mann-Whitney | p &asymp; 0 | &mdash; | validated median 10.0 vs unvalidated 0.5 |
 | Precision@50 | **0.92** | 0.50 | **1.84x lift** |
 | NDCG@50 | **0.92** | 0.60 | |
 
-nCite surfaces physically-validated claims better than traditional citation count.
+pCite surfaces physically-validated claims better than traditional citation count.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Six modules + orchestrator. Single `pyproject.toml`. No Docker. No services.
 
 ## Packages
 
-- **`src/ncite/`** &mdash; pipeline: corpus fetch, claim extraction, validation, graph build, evaluation
+- **`src/pcite/`** &mdash; pipeline: corpus fetch, claim extraction, validation, graph build, evaluation
 - **`src/pcite/`** &mdash; static site generator for [pcite.org](https://pcite.org) (8,761 claim pages)
 
 ## Quick start

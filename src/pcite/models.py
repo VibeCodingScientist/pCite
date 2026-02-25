@@ -1,5 +1,5 @@
 """
-ncite.models — the shared contract
+pcite.models — the shared contract
 
 Three axioms encoded as design decisions:
 
@@ -59,19 +59,19 @@ class Predicate(str, Enum):
     TREATS           = "treats"
 
 
-class NCiteType(str, Enum):
+class PCiteType(str, Enum):
     SUPPORTS    = "supports"
     EXTENDS     = "extends"
     REPLICATES  = "replicates"   # explicit replication relationship — highest weight
     CONTRADICTS = "contradicts"
     APPLIES     = "applies"
 
-NCITE_WEIGHT: dict[NCiteType, float] = {
-    NCiteType.SUPPORTS:    1.0,
-    NCiteType.EXTENDS:     1.2,
-    NCiteType.REPLICATES:  1.5,  # replication earns more than novelty
-    NCiteType.CONTRADICTS: 0.8,  # counter-evidence still earns credit
-    NCiteType.APPLIES:     0.6,
+PCITE_WEIGHT: dict[PCiteType, float] = {
+    PCiteType.SUPPORTS:    1.0,
+    PCiteType.EXTENDS:     1.2,
+    PCiteType.REPLICATES:  1.5,  # replication earns more than novelty
+    PCiteType.CONTRADICTS: 0.8,  # counter-evidence still earns credit
+    PCiteType.APPLIES:     0.6,
 }
 
 
@@ -195,10 +195,10 @@ class Claim(BaseModel):
         return self.model_copy(update={"provenance": list(by_doi.values())})
 
 
-class NCite(BaseModel):
+class PCite(BaseModel):
     source_id:     str
     target_id:     str
-    type:          NCiteType
+    type:          PCiteType
     source_weight: float
 
     @computed_field
@@ -212,7 +212,7 @@ class NCite(BaseModel):
 
         4760× difference. No manual scoring. Entirely from the data model.
         """
-        return NCITE_WEIGHT[self.type] * self.source_weight
+        return PCITE_WEIGHT[self.type] * self.source_weight
 
 
 class Paper(BaseModel):
