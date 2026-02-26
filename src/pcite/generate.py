@@ -92,6 +92,17 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
 .dist-bar{height:14px;border-radius:2px;flex-shrink:0}
 .dist-label{width:80px;text-align:right;flex-shrink:0}
 .dist-count{width:60px;font-size:.8rem;color:#666}
+.explainer{font-size:.95rem;color:#555;line-height:1.6;margin-bottom:1rem;max-width:860px}
+.legend{display:flex;gap:1.25rem;flex-wrap:wrap;font-size:.75rem;color:#666;margin-bottom:.75rem}
+.legend-item{display:flex;align-items:center;gap:.3rem}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.score-tip{position:relative;display:inline-block;cursor:help;margin-left:.3rem}
+.score-tip .tip-icon{font-size:.8rem;color:#999}
+.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;left:50%;
+  transform:translateX(-50%);width:320px;background:#333;color:#fff;font-size:.78rem;
+  line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;text-align:left;
+  font-weight:normal}
+.score-tip:hover .tip-text{visibility:visible}
 footer{margin-top:2rem;padding-top:.75rem;border-top:1px solid #ddd;
   font-size:.75rem;color:#888;text-align:center}
 @media(max-width:600px){
@@ -262,7 +273,7 @@ def render_claim(claim, score_data, graph_edges):
 <div class="stat-row">
   <span>Class: {_esc(short)} ({weight})</span>
   <span>Replicated: {rep} paper{"s" if rep != 1 else ""}</span>
-  <span>Score: {score:.2f}</span>
+  <span>Score: {score:.2f}<span class="score-tip"><span class="tip-icon">&nbsp;&#9432;</span><span class="tip-text">Score = &Sigma; incoming citation weights. Each citation is weighted by the validation class of the source claim (Physical 10.0 &middot; Curated 0.5 &middot; AI 0.01) multiplied by the citation type (Replicates 1.5 &middot; Supports 1.0 &middot; Contradicts 0.8). A score of 364 means this claim received strong physical-tier citation support.</span></span></span>
 </div>
 
 <p class="section-label">EVIDENCE CHAIN &middot; {len(provenance)} source{"s" if len(provenance) != 1 else ""}</p>
@@ -301,7 +312,9 @@ def render_index(claims, scores_by_id):
     n_papers = len({p["doi"] for c in claims for p in c.get("provenance", [])})
 
     return _header("Search claims", depth=0) + f"""
-<p style="font-size:.9rem;color:#666;margin-bottom:.75rem">Validation-weighted scientific claims</p>
+<p style="font-size:.9rem;color:#666;margin-bottom:.5rem">Validation-weighted scientific claims</p>
+
+<p class="explainer">AI systems now generate scientific claims faster than citation metrics can distinguish them from instrument-measured results. pCite weights every citation by the physical grounding of its source &mdash; a mass spectrometer reading outweighs a language model prediction by 1,000&times;. Search any compound, disease, or relationship to see how claims rank when evidence quality, not attention, determines the score.</p>
 
 <input type="text" id="q" placeholder="Search claims — compound, disease, or relationship" autofocus>
 
@@ -314,6 +327,13 @@ def render_index(claims, scores_by_id):
     <option value="3">Min replication: 3</option>
     <option value="5">Min replication: 5</option>
   </select>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['PhysicalMeasurement']}"></span> Physical (10.0)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['Replicated']}"></span> Replicated (2.0)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['HumanCurated']}"></span> Curated (0.5)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['AIGenerated']}"></span> AI-generated (0.01)</span>
 </div>
 
 <div class="summary" id="summary">{len(claims):,} claims &middot; from {n_papers:,} papers</div>

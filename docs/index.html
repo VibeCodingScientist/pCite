@@ -12,7 +12,9 @@
   <nav><a href="index.html">Search</a><a href="corpus.html">Corpus</a></nav>
 </header>
 
-<p style="font-size:.9rem;color:#666;margin-bottom:.75rem">Validation-weighted scientific claims</p>
+<p style="font-size:.9rem;color:#666;margin-bottom:.5rem">Validation-weighted scientific claims</p>
+
+<p class="explainer">AI systems now generate scientific claims faster than citation metrics can distinguish them from instrument-measured results. pCite weights every citation by the physical grounding of its source &mdash; a mass spectrometer reading outweighs a language model prediction by 1,000&times;. Search any compound, disease, or relationship to see how claims rank when evidence quality, not attention, determines the score.</p>
 
 <input type="text" id="q" placeholder="Search claims — compound, disease, or relationship" autofocus>
 
@@ -44,6 +46,13 @@
     <option value="3">Min replication: 3</option>
     <option value="5">Min replication: 5</option>
   </select>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot" style="background:#d62728"></span> Physical (10.0)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#ff7f0e"></span> Replicated (2.0)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#2ca02c"></span> Curated (0.5)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#aec7e8"></span> AI-generated (0.01)</span>
 </div>
 
 <div class="summary" id="summary">8,761 claims &middot; from 1,287 papers</div>

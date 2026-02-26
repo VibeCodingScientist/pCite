@@ -47,6 +47,17 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
 .dist-bar{height:14px;border-radius:2px;flex-shrink:0}
 .dist-label{width:80px;text-align:right;flex-shrink:0}
 .dist-count{width:60px;font-size:.8rem;color:#666}
+.explainer{font-size:.95rem;color:#555;line-height:1.6;margin-bottom:1rem;max-width:860px}
+.legend{display:flex;gap:1.25rem;flex-wrap:wrap;font-size:.75rem;color:#666;margin-bottom:.75rem}
+.legend-item{display:flex;align-items:center;gap:.3rem}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.score-tip{position:relative;display:inline-block;cursor:help;margin-left:.3rem}
+.score-tip .tip-icon{font-size:.8rem;color:#999}
+.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;left:50%;
+  transform:translateX(-50%);width:320px;background:#333;color:#fff;font-size:.78rem;
+  line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;text-align:left;
+  font-weight:normal}
+.score-tip:hover .tip-text{visibility:visible}
 footer{margin-top:2rem;padding-top:.75rem;border-top:1px solid #ddd;
   font-size:.75rem;color:#888;text-align:center}
 @media(max-width:600px){
