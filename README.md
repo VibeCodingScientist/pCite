@@ -2,7 +2,7 @@
 
 **Physical measurement weighting for scientific claim retrieval in the age of AI-generated science.**
 
-AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and language-model-synthesised assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and AIGenerated (0.01).
+AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and language-model-synthesised assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and TextDerived (0.01).
 
 Concept: https://vibecodingscientist.github.io/pCite — Preprint: forthcoming
 
@@ -12,14 +12,13 @@ Concept: https://vibecodingscientist.github.io/pCite — Preprint: forthcoming
 
 Evaluated on 8,761 metabolomics claims from 1,994 papers (2021–2026), with 30,759 typed citation edges.
 
-**Main experiment — MetaboLights-first corpus (5,470 Physical-tier claims)**
+**Main experiment — MetaboLights-first corpus (5,495 Physical-tier claims)**
 
 | Metric | pCite | Traditional | Lift |
 |---|---|---|---|
 | Mann-Whitney p (base_weight) | < 2.2e-16 | — | validated median 10.0 vs 0.5 |
-| Precision@50 | **0.92** | 0.50 | **1.84x** |
-| Precision@100 | **0.95** | 0.28 | **3.39x** |
-| NDCG@50 | **0.92** | 0.60 | — |
+| Precision@50 | **0.94** | 0.50 | **1.88x** |
+| NDCG@50 | **0.94** | 0.60 | — |
 
 **Negative control — corpus with 0 Physical-tier claims**
 
@@ -43,8 +42,8 @@ pCite loses predictably when no physically-grounded claims exist. This is the ex
 | PhysicalMeasurement | 10.0 | Raw instrument data in a public repository (MetaboLights, PDB, PRIDE) |
 | ClinicalObservation | 4.0 | EHR-verified patient data, IRB-approved trial outcomes |
 | Replicated | 2.0 | Same assertion confirmed in 3+ independent sources |
-| HumanCurated | 0.5 | Structured database deposit, no raw data |
-| AIGenerated | 0.01 | Synthesised from literature text |
+| DatabaseReferenced | 0.5 | Structured database deposit, no raw data |
+| TextDerived | 0.01 | Synthesised from literature text |
 | Hypothesis | 0.0 | Proposed, untested |
 
 **Scoring formula:**
@@ -55,9 +54,9 @@ edge_weight  = PCiteTypeWeight(type)   × source.base_weight
 pcite_score  = Σ incoming edge weights
 ```
 
-Citation edge types and multipliers: `replicates` 1.5 · `extends` 1.2 · `supports` 1.0 · `contradicts` 0.8 · `applies` 0.6.
+Citation edge types and multipliers: `replicates` 1.5 · `extends` 1.2 · `supports` 1.0 · `contradicts` -0.5 · `applies` 0.6.
 
-A PhysicalMeasurement claim cited 35 times by other physical claims reaches a score of 364. An AIGenerated claim cited 1,000 times peaks at 0.10. No manual scoring. Entirely from the data model.
+A PhysicalMeasurement claim cited 35 times by other physical claims reaches a score of 364. A TextDerived claim cited 1,000 times peaks at 0.10. No manual scoring. Entirely from the data model.
 
 ---
 

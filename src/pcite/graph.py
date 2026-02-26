@@ -167,6 +167,25 @@ def compute_pcite_scores(G: nx.DiGraph) -> dict[str, float]:
     }
 
 
+def compute_propagated_score(G: nx.DiGraph, alpha: float = 0.1) -> dict[str, float]:
+    """
+    Neighbourhood-propagated pCite score.
+
+    For each node, adds alpha × (mean pCite score of neighbours) to its own
+    pCite score. Neighbours = all nodes connected by an edge in either direction.
+    """
+    pcite = {n: G.nodes[n].get("pcite_score", 0.0) for n in G.nodes()}
+    propagated = {}
+    for node in G.nodes():
+        neighbours = set(G.predecessors(node)) | set(G.successors(node))
+        if neighbours:
+            neighbour_mean = sum(pcite.get(n, 0.0) for n in neighbours) / len(neighbours)
+            propagated[node] = pcite[node] + alpha * neighbour_mean
+        else:
+            propagated[node] = pcite[node]
+    return propagated
+
+
 async def build_full_graph() -> nx.DiGraph:
     from pcite.extract import load_claims
     claims = load_claims()
@@ -246,6 +265,8 @@ async def build_full_graph() -> nx.DiGraph:
     print(f"  {edges} edges added", file=sys.stderr)
     scores = compute_pcite_scores(G)
     nx.set_node_attributes(G, scores, "pcite_score")
+    propagated = compute_propagated_score(G)
+    nx.set_node_attributes(G, propagated, "pcite_propagated")
     nx.write_graphml(G, GRAPH_OUT)
 
     with SCORES_OUT.open("w") as f:
@@ -253,6 +274,7 @@ async def build_full_graph() -> nx.DiGraph:
             f.write(json.dumps({
                 "claim_id":          c.id,
                 "pcite_score":       scores.get(c.id, 0.0),
+                "pcite_propagated":  propagated.get(c.id, 0.0),
                 "validation_class":  c.validation_class.value,
                 "replication_count": c.replication_count,
                 "base_weight":       c.base_weight,

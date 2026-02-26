@@ -17,35 +17,35 @@ DATA_DIR = Path("data")
 DOCS_DIR = Path("docs")
 
 COLORS = {
-    "PhysicalMeasurement": "#2ca02c",
+    "PhysicalMeasurement":  "#2ca02c",
     "ClinicalObservation":  "#7bc96f",
     "Replicated":           "#ff7f0e",
-    "HumanCurated":         "#f0a030",
-    "AIGenerated":          "#d62728",
+    "DatabaseReferenced":   "#f0a030",
+    "TextDerived":          "#d62728",
     "Hypothesis":           "#c7c7c7",
 }
 
 SHORT_NAMES = {
-    "PhysicalMeasurement": "Physical",
+    "PhysicalMeasurement":  "Physical",
     "ClinicalObservation":  "Clinical",
     "Replicated":           "Replicated",
-    "HumanCurated":         "Curated",
-    "AIGenerated":          "AI Generated",
+    "DatabaseReferenced":   "DB Referenced",
+    "TextDerived":          "Text Derived",
     "Hypothesis":           "Hypothesis",
 }
 
 WEIGHTS = {
-    "PhysicalMeasurement": 10.0,
+    "PhysicalMeasurement":  10.0,
     "ClinicalObservation":  4.0,
     "Replicated":           2.0,
-    "HumanCurated":         0.5,
-    "AIGenerated":          0.01,
+    "DatabaseReferenced":   0.5,
+    "TextDerived":          0.01,
     "Hypothesis":           0.0,
 }
 
 CITE_WEIGHTS = {
     "replicates": 1.5, "extends": 1.2, "supports": 1.0,
-    "contradicts": 0.8, "applies": 0.6,
+    "contradicts": -0.5, "applies": 0.6,
 }
 
 CSS = """\
@@ -160,7 +160,7 @@ def _footer():
 def _score_val(score_data):
     """Use pcite_score when non-zero, fall back to base_weight."""
     ns = score_data.get("pcite_score", 0)
-    return ns if ns > 0 else score_data.get("base_weight", 0)
+    return ns if ns != 0 else score_data.get("base_weight", 0)
 
 
 def load_data():
@@ -205,13 +205,13 @@ def build_search_index(claims, scores_by_id):
             "v": sd.get("validation_class", c.get("validation_class", "")),
             "r": sd.get("replication_count", c.get("replication_count", 1)),
             "b": round(score, 3),
-            "n": round(score / max_score * 100, 1),
+            "n": round(max(0, score / max_score * 100), 1),
         })
     index.sort(key=lambda x: x["b"], reverse=True)
     return index
 
 
-def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type):
+def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type, propagated=None):
     base_weight = weight * math.log2(rep + 1)
     n_citations = sum(by_type.values()) if by_type else 0
     out = (
@@ -228,7 +228,8 @@ def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type):
             if count == 0:
                 continue
             subtotal = sum(e["weight"] for e in edges_by_type.get(ct, []))
-            parts.append(f'{count}&times; {ct} (+{subtotal:.2f})')
+            sign = "+" if subtotal >= 0 else ""
+            parts.append(f'{count}&times; {ct} ({sign}{subtotal:.2f})')
         cite_detail = ' &middot; '.join(parts)
         out += (
             f'<br>Score from {n_citations} citations: <strong>{score:.2f}</strong>'
@@ -236,6 +237,8 @@ def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type):
         )
     else:
         out += '<br>No incoming citations yet'
+    if propagated is not None and propagated != 0:
+        out += f'<br>Neighbourhood: {propagated:.2f}'
     out += '</div>\n'
     return out
 
@@ -243,7 +246,7 @@ def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type):
 def render_claim(claim, score_data, graph_edges, claims_by_id):
     c = claim
     sd = score_data
-    vc = sd.get("validation_class", c.get("validation_class", "AIGenerated"))
+    vc = sd.get("validation_class", c.get("validation_class", "TextDerived"))
     short = SHORT_NAMES.get(vc, vc)
     color = COLORS.get(vc, "#888")
     weight = WEIGHTS.get(vc, 0)
@@ -255,13 +258,13 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
     provenance = c.get("provenance", [])
     provenance_sorted = sorted(
         provenance,
-        key=lambda p: WEIGHTS.get(p.get("validation_class", "AIGenerated"), 0),
+        key=lambda p: WEIGHTS.get(p.get("validation_class", "TextDerived"), 0),
         reverse=True,
     )
 
     evidence_html = ""
     for p in provenance_sorted:
-        pvc = p.get("validation_class", "AIGenerated")
+        pvc = p.get("validation_class", "TextDerived")
         pc = COLORS.get(pvc, "#888")
         ps = SHORT_NAMES.get(pvc, pvc)
         doi = _esc(p["doi"])
@@ -295,7 +298,8 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
             count = by_type.get(ct, 0)
             bw = count / max_ct * 100 if max_ct else 0
             subtotal = sum(e["weight"] for e in edges_by_type.get(ct, []))
-            subtotal_str = f'<span class="cite-subtotal">&middot; +{subtotal:.2f}</span>' if count else ''
+            sub_sign = "+" if subtotal >= 0 else ""
+            subtotal_str = f'<span class="cite-subtotal">&middot; {sub_sign}{subtotal:.2f}</span>' if count else ''
             citations_html += (
                 f'<div class="cite-bar">'
                 f'<span style="width:70px;text-align:right">{ct.title()}</span>'
@@ -309,7 +313,7 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
                 src = claims_by_id.get(e["source"])
                 if not src:
                     continue
-                src_vc = src.get("validation_class", "AIGenerated")
+                src_vc = src.get("validation_class", "TextDerived")
                 src_color = COLORS.get(src_vc, "#888")
                 triple = f'{_esc(src["subject"]["name"])} — {_esc(src["predicate"])} → {_esc(src["object"]["name"])}'
                 w = e["weight"]
@@ -317,7 +321,7 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
                     f'<div class="cite-claim">'
                     f'<span class="evidence-dot" style="background:{src_color}"></span>'
                     f'<span class="cite-claim-triple">{triple}</span>'
-                    f'<span class="cite-claim-weight">+{w:.2f}</span>'
+                    f'<span class="cite-claim-weight">{"+" if w >= 0 else ""}{w:.2f}</span>'
                     f'<a href="../claim/{_esc(e["source"])}.html">view &rarr;</a>'
                     f'</div>\n'
                 )
@@ -343,10 +347,10 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
 <div class="stat-row">
   <span>Class: {_esc(short)} ({weight})</span>
   <span>Replicated: {rep} paper{"s" if rep != 1 else ""}</span>
-  <span>Score: {score:.2f}<span class="score-tip"><span class="tip-icon">&nbsp;&#9432;</span><span class="tip-text">Score = &Sigma; incoming citation weights. Each citation is weighted by the validation class of the source claim (Physical 10.0 &middot; Curated 0.5 &middot; AI 0.01) multiplied by the citation type (Replicates 1.5 &middot; Supports 1.0 &middot; Contradicts 0.8). A score of 364 means this claim received strong physical-tier citation support.</span></span></span>
+  <span>Score: {score:.2f}<span class="score-tip"><span class="tip-icon">&nbsp;&#9432;</span><span class="tip-text">Score = &Sigma; incoming citation weights. Each citation is weighted by the validation class of the source claim (Physical 10.0 &middot; DB Ref 0.5 &middot; Text Derived 0.01) multiplied by the citation type (Replicates 1.5 &middot; Supports 1.0 &middot; Contradicts &minus;0.5). A score of 364 means this claim received strong physical-tier citation support.</span></span></span>
 </div>
 
-{_render_score_breakdown(weight, short, rep, score, by_type, edges_by_type)}
+{_render_score_breakdown(weight, short, rep, score, by_type, edges_by_type, propagated=sd.get("pcite_propagated"))}
 
 <p class="section-label">EVIDENCE CHAIN &middot; {len(provenance)} source{"s" if len(provenance) != 1 else ""}</p>
 <hr class="section-rule">
@@ -372,7 +376,7 @@ def render_index(claims, scores_by_id):
         pred_options += f'    <option value="{_esc(p)}">{_esc(p)}</option>\n'
 
     classes = ["PhysicalMeasurement", "ClinicalObservation", "Replicated",
-               "HumanCurated", "AIGenerated", "Hypothesis"]
+               "DatabaseReferenced", "TextDerived", "Hypothesis"]
     cls_options = '<option value="">All classes</option>\n'
     for vc in classes:
         short = SHORT_NAMES.get(vc, vc)
@@ -404,8 +408,8 @@ def render_index(claims, scores_by_id):
 <div class="legend">
   <span class="legend-item"><span class="legend-dot" style="background:{COLORS['PhysicalMeasurement']}"></span> Physical (10.0)</span>
   <span class="legend-item"><span class="legend-dot" style="background:{COLORS['Replicated']}"></span> Replicated (2.0)</span>
-  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['HumanCurated']}"></span> Curated (0.5)</span>
-  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['AIGenerated']}"></span> AI-generated (0.01)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['DatabaseReferenced']}"></span> DB Referenced (0.5)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:{COLORS['TextDerived']}"></span> Text Derived (0.01)</span>
 </div>
 
 <div class="summary" id="summary">{len(claims):,} claims &middot; from {n_papers:,} papers</div>
@@ -487,7 +491,7 @@ def render_index(claims, scores_by_id):
 
   function shortName(v) {{
     const m = {{"PhysicalMeasurement":"Physical","ClinicalObservation":"Clinical",
-      "Replicated":"Replicated","HumanCurated":"Curated","AIGenerated":"AI Generated",
+      "Replicated":"Replicated","DatabaseReferenced":"DB Referenced","TextDerived":"Text Derived",
       "Hypothesis":"Hypothesis"}};
     return m[v] || v;
   }}
@@ -523,7 +527,7 @@ def render_corpus(claims, scores_by_id, results):
     # Validation class distribution bars
     classes_order = [
         "PhysicalMeasurement", "ClinicalObservation", "Replicated",
-        "HumanCurated", "AIGenerated",
+        "DatabaseReferenced", "TextDerived",
     ]
     max_count = max((vc_counts.get(vc, 0) for vc in classes_order), default=1) or 1
     dist_html = ""
@@ -566,7 +570,7 @@ def render_corpus(claims, scores_by_id, results):
 <hr class="section-rule">
 {dist_html}
 <p style="font-size:.85rem;color:#555;margin-top:.75rem;max-width:640px">
-  The distribution is the argument. {vc_counts.get("AIGenerated", 0) / n_claims * 100 if n_claims else 0:.0f}% of extracted claims have
+  The distribution is the argument. {vc_counts.get("TextDerived", 0) / n_claims * 100 if n_claims else 0:.0f}% of extracted claims have
   no physical anchor. Under traditional citation metrics, these
   claims are indistinguishable from the {vc_counts.get("PhysicalMeasurement", 0) / n_claims * 100 if n_claims else 0:.1f}% that do.
 </p>
