@@ -1,0 +1,24 @@
+{
+  "n_total": 8098,
+  "mann_whitney": {
+    "u": 56637.0,
+    "p_value": 8.776299262307529e-11,
+    "n_validated": 7,
+    "n_unvalidated": 8091,
+    "median_validated": 4.643856189774724,
+    "median_unvalidated": 0.5,
+    "score_key": "base_weight"
+  },
+  "precision_50": {
+    "k": 50,
+    "precision_pcite": 0.02,
+    "precision_traditional": 0.14,
+    "lift": 0.14285714285714285,
+    "score_key": "pcite_score"
+  },
+  "ndcg_50": {
+    "k": 50,
+    "ndcg_pcite": 0.27487633291429087,
+    "ndcg_traditional": 0.9683310355387568
+  }
+}
