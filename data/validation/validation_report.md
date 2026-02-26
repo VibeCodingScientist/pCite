@@ -90,7 +90,7 @@ Three frontier models agree on the sign of the relationship 92% of the time. Whe
 | Gemini 3 | 1.0244 |
 | GPT-5.2 | 0.8259 |
 
-The original labels produce a lower mean weight (0.77) due to the `contradicts` fraction pulling it down. All three validation models produce mean weights closer to 1.0. Since pCite scores are dominated by `base_weight` (the 1,000× gap between PhysicalMeasurement at 10.0 and AIGenerated at 0.01), the edge type multiplier contributes a second-order effect. The rank ordering of claims by pCite score — and therefore the Mann-Whitney hypothesis test — is robust to these label variations.
+The original labels produce a lower mean weight (0.77) due to the `contradicts` fraction pulling it down. All three validation models produce mean weights closer to 1.0. Since pCite scores are dominated by `base_weight` (the 1,000× gap between PhysicalMeasurement at 10.0 and TextDerived at 0.01), the edge type multiplier contributes a second-order effect. The rank ordering of claims by pCite score — and therefore the Mann-Whitney hypothesis test — is robust to these label variations.
 
 ### Per-Class Agreement (fraction matching original label)
 
@@ -110,9 +110,9 @@ The original labels produce a lower mean weight (0.77) due to the `contradicts` 
 
 ### Setup
 
-Stratified sample of 50 claims across four validation classes: PhysicalMeasurement (13), HumanCurated (13), AIGenerated (12), Replicated (12). For each claim, we retrieved the source paper's abstract from PubMed and asked Claude (claude-sonnet-4-6) whether the claim is traceable to the abstract text.
+Stratified sample of 50 claims across four validation classes: PhysicalMeasurement (13), DatabaseReferenced (13), TextDerived (12), Replicated (12). For each claim, we retrieved the source paper's abstract from PubMed and asked Claude (claude-sonnet-4-6) whether the claim is traceable to the abstract text.
 
-35 of 50 claims were checked; 15 had no abstract available (all 12 AIGenerated claims plus 3 others — AIGenerated claims originate from papers where PubMed did not return an abstract).
+35 of 50 claims were checked; 15 had no abstract available (all 12 TextDerived claims plus 3 others — TextDerived claims originate from papers where PubMed did not return an abstract).
 
 ### Results
 
@@ -121,25 +121,25 @@ Stratified sample of 50 claims across four validation classes: PhysicalMeasureme
 | Validation class | N checked | Traceable | Precision |
 |------------------|-----------|-----------|-----------|
 | PhysicalMeasurement | 10 | 9 | 90.0% |
-| HumanCurated | 13 | 10 | 76.9% |
+| DatabaseReferenced | 13 | 10 | 76.9% |
 | Replicated | 12 | 11 | 91.7% |
-| AIGenerated | 0 | — | not checked (no abstracts) |
+| TextDerived | 0 | — | not checked (no abstracts) |
 
 ### Non-Traceable Claims (5 of 35)
 
 | Claim | Class | Issue |
 |-------|-------|-------|
 | "Amino acids increases White tea" | Physical | Inverted subject-object (abstract discusses amino acids *in* white tea, not increasing it) |
-| "Lipid membrane composition predicts Cell sensitivity to calcium electroporation" | HumanCurated | Correct relationship but abstract frames it differently |
-| "Penalized Orthogonal Components Regression (POCR) predicts metabolite biomarkers" | HumanCurated | Method-as-subject extraction; abstract discusses the method, doesn't frame it as a prediction |
-| "Bamboo Leaf Extract from Guadua incana decreases glutathione metabolism" | HumanCurated | Directional error — abstract describes modulation, not decrease |
+| "Lipid membrane composition predicts Cell sensitivity to calcium electroporation" | DatabaseReferenced | Correct relationship but abstract frames it differently |
+| "Penalized Orthogonal Components Regression (POCR) predicts metabolite biomarkers" | DatabaseReferenced | Method-as-subject extraction; abstract discusses the method, doesn't frame it as a prediction |
+| "Bamboo Leaf Extract from Guadua incana decreases glutathione metabolism" | DatabaseReferenced | Directional error — abstract describes modulation, not decrease |
 | "odd-chain fatty acyl-containing triacylglycerols distinguishes colon cancer" | Replicated | Claim is correct but uses `distinguishes` predicate which is more specific than what the abstract states |
 
 The failure modes are consistent: subject-object inversions, directional over-specification, and method-as-entity extraction. These are systematic LLM extraction artefacts, not random errors.
 
 ### Interpretation
 
-PhysicalMeasurement (90%) and Replicated (92%) claims — which carry the highest pCite weights — show the strongest traceability. HumanCurated claims (77%) show slightly more extraction noise, but these carry only 0.5 base weight (20× less than Physical). The extraction errors are therefore concentrated in the low-weight region of the score distribution and have minimal impact on the hypothesis test.
+PhysicalMeasurement (90%) and Replicated (92%) claims — which carry the highest pCite weights — show the strongest traceability. DatabaseReferenced claims (77%) show slightly more extraction noise, but these carry only 0.5 base weight (20× less than Physical). The extraction errors are therefore concentrated in the low-weight region of the score distribution and have minimal impact on the hypothesis test.
 
 ---
 
@@ -150,9 +150,9 @@ PhysicalMeasurement (90%) and Replicated (92%) claims — which carry the highes
 | Edge type labels | Low inter-model kappa (0.07–0.21) on 5 fine-grained types | **Minimal.** Disagreement is between positive types (supports/extends/applies). 92% 3-model polarity agreement. Score ranking robust. |
 | Contradicts labels | 89–91% reclassified as positive by validation models | **Second-order.** Affects ~12% of edges. Would increase scores slightly if relabeled, strengthening the Physical > AI gap. |
 | Claim extraction | 85.7% traceable to source abstracts | **Acceptable.** Errors are systematic (inversions, over-specification), not random. Highest-weight classes (Physical, Replicated) have 90%+ precision. |
-| AIGenerated claims | Not checkable (no abstracts) | **Acknowledged limitation.** These carry 0.01 base weight and do not materially affect score distribution. |
+| TextDerived claims | Not checkable (no abstracts) | **Acknowledged limitation.** These carry 0.01 base weight and do not materially affect score distribution. |
 
-**Conclusion:** The pCite scoring framework is robust to the observed variation in edge typing and claim extraction. The hypothesis that physically-validated, replicated claims receive higher pCite scores than AI-generated text claims holds under all tested reclassification scenarios, because the 1,000× weight gap between validation classes dominates the score, and edge type multipliers contribute a second-order effect (0.6–1.5×).
+**Conclusion:** The pCite scoring framework is robust to the observed variation in edge typing and claim extraction. The hypothesis that physically-validated, replicated claims receive higher pCite scores than text-derived claims holds under all tested reclassification scenarios, because the 1,000× weight gap between validation classes dominates the score, and edge type multipliers contribute a second-order effect (0.6–1.5×).
 
 ---
 
@@ -160,6 +160,6 @@ PhysicalMeasurement (90%) and Replicated (92%) claims — which carry the highes
 
 1. **Part 1** uses the same prompt template as graph construction. Models may show correlated biases due to shared framing.
 2. **Part 2** uses Claude to verify Claude's own extractions. This measures internal consistency, not ground truth. Manual expert review of a subset is recommended for full validation.
-3. **AIGenerated claims** could not be spot-checked due to missing abstracts. A future validation should retrieve full-text PDFs for these papers.
+3. **TextDerived claims** could not be spot-checked due to missing abstracts. A future validation should retrieve full-text PDFs for these papers.
 4. **Sample size:** 200 edges and 50 claims provide statistical power for aggregate metrics but not for rare edge types (only 1 `replicates` edge in the sample).
 5. **Contradicts reclassification** deserves dedicated investigation: if the original Gemini 2.0 Flash over-assigned `contradicts`, the current pCite scores may underestimate some claims.
