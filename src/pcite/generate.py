@@ -9,6 +9,7 @@ Run: python -m pcite.generate
 
 import html
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -40,6 +41,11 @@ WEIGHTS = {
     "HumanCurated":         0.5,
     "AIGenerated":          0.01,
     "Hypothesis":           0.0,
+}
+
+CITE_WEIGHTS = {
+    "replicates": 1.5, "extends": 1.2, "supports": 1.0,
+    "contradicts": 0.8, "applies": 0.6,
 }
 
 CSS = """\
@@ -103,11 +109,15 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
 .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .score-tip{position:relative;display:inline-block;cursor:help;margin-left:.3rem}
 .score-tip .tip-icon{font-size:.8rem;color:#999}
-.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;left:50%;
-  transform:translateX(-50%);width:320px;background:#333;color:#fff;font-size:.78rem;
+.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;right:0;left:auto;
+  transform:none;width:420px;background:#333;color:#fff;font-size:.78rem;
   line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;text-align:left;
   font-weight:normal}
 .score-tip:hover .tip-text{visibility:visible}
+.score-breakdown{font-size:.88rem;color:#444;line-height:1.6;margin:.25rem 0}
+.cite-claim-weight{width:60px;text-align:right;flex-shrink:0;color:#888;font-size:.78rem;
+  font-variant-numeric:tabular-nums}
+.cite-subtotal{font-size:.78rem;color:#888;margin-left:.25rem}
 footer{margin-top:2rem;padding-top:.75rem;border-top:1px solid #ddd;
   font-size:.75rem;color:#888;text-align:center}
 @media(max-width:600px){
@@ -201,6 +211,24 @@ def build_search_index(claims, scores_by_id):
     return index
 
 
+def _render_score_breakdown(weight, short, rep, score, n_citations):
+    base_weight = weight * math.log2(rep + 1)
+    lines = (
+        f'<p class="section-label">SCORE BREAKDOWN</p>\n'
+        f'<hr class="section-rule">\n'
+        f'<div class="score-breakdown">'
+        f'Base weight: {weight} ({_esc(short)}) &times; log&#8322;({rep}+1) = {base_weight:.2f}'
+    )
+    if n_citations > 0:
+        lines += (
+            f'<br>Incoming citations: {n_citations} &rarr; score {score:.2f}'
+        )
+    else:
+        lines += ' &middot; No incoming citations yet'
+    lines += '</div>\n'
+    return lines
+
+
 def render_claim(claim, score_data, graph_edges, claims_by_id):
     c = claim
     sd = score_data
@@ -254,11 +282,14 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
         for ct in ["replicates", "supports", "contradicts", "extends", "applies"]:
             count = by_type.get(ct, 0)
             bw = count / max_ct * 100 if max_ct else 0
+            subtotal = sum(e["weight"] for e in edges_by_type.get(ct, []))
+            subtotal_str = f'<span class="cite-subtotal">&middot; +{subtotal:.2f}</span>' if count else ''
             citations_html += (
                 f'<div class="cite-bar">'
                 f'<span style="width:70px;text-align:right">{ct.title()}</span>'
                 f'<span class="cite-bar-fill" style="width:{bw:.0f}px"></span>'
                 f'<span>{count}</span>'
+                f'{subtotal_str}'
                 f'</div>\n'
             )
             # List citing claims under this type
@@ -269,10 +300,12 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
                 src_vc = src.get("validation_class", "AIGenerated")
                 src_color = COLORS.get(src_vc, "#888")
                 triple = f'{_esc(src["subject"]["name"])} — {_esc(src["predicate"])} → {_esc(src["object"]["name"])}'
+                w = e["weight"]
                 citations_html += (
                     f'<div class="cite-claim">'
                     f'<span class="evidence-dot" style="background:{src_color}"></span>'
                     f'<span class="cite-claim-triple">{triple}</span>'
+                    f'<span class="cite-claim-weight">+{w:.2f}</span>'
                     f'<a href="../claim/{_esc(e["source"])}.html">view &rarr;</a>'
                     f'</div>\n'
                 )
@@ -300,6 +333,8 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
   <span>Replicated: {rep} paper{"s" if rep != 1 else ""}</span>
   <span>Score: {score:.2f}<span class="score-tip"><span class="tip-icon">&nbsp;&#9432;</span><span class="tip-text">Score = &Sigma; incoming citation weights. Each citation is weighted by the validation class of the source claim (Physical 10.0 &middot; Curated 0.5 &middot; AI 0.01) multiplied by the citation type (Replicates 1.5 &middot; Supports 1.0 &middot; Contradicts 0.8). A score of 364 means this claim received strong physical-tier citation support.</span></span></span>
 </div>
+
+{_render_score_breakdown(weight, short, rep, score, len(edges))}
 
 <p class="section-label">EVIDENCE CHAIN &middot; {len(provenance)} source{"s" if len(provenance) != 1 else ""}</p>
 <hr class="section-rule">
