@@ -16,11 +16,11 @@ DATA_DIR = Path("data")
 DOCS_DIR = Path("docs")
 
 COLORS = {
-    "PhysicalMeasurement": "#d62728",
-    "ClinicalObservation":  "#e377c2",
+    "PhysicalMeasurement": "#2ca02c",
+    "ClinicalObservation":  "#7bc96f",
     "Replicated":           "#ff7f0e",
-    "HumanCurated":         "#2ca02c",
-    "AIGenerated":          "#aec7e8",
+    "HumanCurated":         "#f0a030",
+    "AIGenerated":          "#d62728",
     "Hypothesis":           "#c7c7c7",
 }
 
