@@ -87,6 +87,11 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
   font-size:.9rem;border:1px solid #ccc;border-radius:3px;background:#fff;cursor:pointer}
 .cite-bar{display:flex;align-items:center;gap:.5rem;font-size:.85rem;margin:.2rem 0}
 .cite-bar-fill{height:10px;border-radius:2px;background:#888}
+.cite-claim{display:flex;align-items:center;gap:.5rem;font-size:.82rem;margin:.15rem 0;
+  padding-left:80px}
+.cite-claim-triple{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#333}
+.cite-claim a{flex-shrink:0;font-size:.78rem;color:#1a0dab}
 .corpus-stat{font-size:.95rem;margin:.2rem 0}
 .dist-row{display:flex;align-items:center;gap:.5rem;font-size:.85rem;margin:.3rem 0}
 .dist-bar{height:14px;border-radius:2px;flex-shrink:0}
@@ -171,7 +176,9 @@ def load_data():
                 "weight": float(d.get("weight", 0)),
             })
 
-    return claims, scores_by_id, results, graph_edges
+    claims_by_id = {c["id"]: c for c in claims}
+
+    return claims, scores_by_id, results, graph_edges, claims_by_id
 
 
 def build_search_index(claims, scores_by_id):
@@ -194,7 +201,7 @@ def build_search_index(claims, scores_by_id):
     return index
 
 
-def render_claim(claim, score_data, graph_edges):
+def render_claim(claim, score_data, graph_edges, claims_by_id):
     c = claim
     sd = score_data
     vc = sd.get("validation_class", c.get("validation_class", "AIGenerated"))
@@ -236,8 +243,11 @@ def render_claim(claim, score_data, graph_edges):
     edges = graph_edges.get(c["id"], [])
     citations_html = ""
     if edges:
-        from collections import Counter
+        from collections import Counter, defaultdict
         by_type = Counter(e["type"] for e in edges)
+        edges_by_type = defaultdict(list)
+        for e in edges:
+            edges_by_type[e["type"]].append(e)
         total = len(edges)
         max_ct = max(by_type.values()) if by_type else 1
         citations_html += f'<p class="section-label">CITATIONS RECEIVED &middot; {total} total</p>\n<hr class="section-rule">\n'
@@ -251,6 +261,21 @@ def render_claim(claim, score_data, graph_edges):
                 f'<span>{count}</span>'
                 f'</div>\n'
             )
+            # List citing claims under this type
+            for e in edges_by_type.get(ct, []):
+                src = claims_by_id.get(e["source"])
+                if not src:
+                    continue
+                src_vc = src.get("validation_class", "AIGenerated")
+                src_color = COLORS.get(src_vc, "#888")
+                triple = f'{_esc(src["subject"]["name"])} — {_esc(src["predicate"])} → {_esc(src["object"]["name"])}'
+                citations_html += (
+                    f'<div class="cite-claim">'
+                    f'<span class="evidence-dot" style="background:{src_color}"></span>'
+                    f'<span class="cite-claim-triple">{triple}</span>'
+                    f'<a href="../claim/{_esc(e["source"])}.html">view &rarr;</a>'
+                    f'</div>\n'
+                )
     else:
         citations_html = '<p style="font-size:.85rem;color:#888">No citations yet.</p>\n'
 
@@ -510,7 +535,7 @@ def render_corpus(claims, scores_by_id, results):
 
 def main():
     print("pcite: loading data...", file=sys.stderr)
-    claims, scores_by_id, results, graph_edges = load_data()
+    claims, scores_by_id, results, graph_edges, claims_by_id = load_data()
     print(f"  {len(claims):,} claims, {len(scores_by_id):,} scores", file=sys.stderr)
 
     # Create output dirs
@@ -534,7 +559,7 @@ def main():
     total = len(claims)
     for i, c in enumerate(claims):
         sd = scores_by_id.get(c["id"], {})
-        page = render_claim(c, sd, graph_edges)
+        page = render_claim(c, sd, graph_edges, claims_by_id)
         (DOCS_DIR / "claim" / f"{c['id']}.html").write_text(page)
         if (i + 1) % 1000 == 0 or (i + 1) == total:
             print(f"  claims: {i + 1:,}/{total:,}", file=sys.stderr)
