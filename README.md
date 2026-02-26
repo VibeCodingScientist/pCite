@@ -4,7 +4,9 @@ Validation-weighted citation framework for reproducible biomedical knowledge gra
 
 ## Results
 
-Run 3 corpus: 8,761 claims from 1,287 papers, 5,495 Physical-tier (MetaboLights-verified), 30,759 citation edges.
+### Table 1 &mdash; Run 3 (MetaboLights-first corpus)
+
+8,761 claims from 1,287 papers, 5,495 Physical-tier (MetaboLights-verified), 30,759 citation edges.
 
 | Metric | pCite | Traditional | |
 |---|---|---|---|
@@ -12,7 +14,17 @@ Run 3 corpus: 8,761 claims from 1,287 papers, 5,495 Physical-tier (MetaboLights-
 | Precision@50 | **0.92** | 0.50 | **1.84x lift** |
 | NDCG@50 | **0.92** | 0.60 | |
 
-pCite surfaces physically-validated claims better than traditional citation count.
+### Table 2 &mdash; Negative control (no Physical-tier claims)
+
+8,098 claims from 1,994 papers, 0 Physical-tier, 7 Replicated, 16,461 citation edges.
+
+| Metric | pCite | Traditional | |
+|---|---|---|---|
+| Mann-Whitney | p = 8.8 &times; 10⁻¹¹ | &mdash; | validated median 4.6 vs unvalidated 0.5 |
+| Precision@50 | 0.02 | **0.14** | pCite loses &mdash; expected |
+| NDCG@50 | 0.27 | **0.97** | pCite loses &mdash; expected |
+
+The negative control confirms the hypothesis from the inverse direction: without Physical-tier claims the validation weight gap has nothing to act on, and pCite correctly degrades. Raw data preserved in `data/negative-control/`.
 
 ## Architecture
 
