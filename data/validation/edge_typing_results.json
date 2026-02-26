@@ -1,0 +1,2059 @@
+{
+  "n_sampled": 200,
+  "n_valid": 197,
+  "models": [
+    "claude",
+    "gemini",
+    "gpt52"
+  ],
+  "kappa_matrix": {
+    "claude_vs_gemini": 0.1251,
+    "claude_vs_gpt52": 0.0682,
+    "gemini_vs_gpt52": 0.2095
+  },
+  "kappa_vs_original": {
+    "claude_vs_original": 0.0418,
+    "gemini_vs_original": 0.1417,
+    "gpt52_vs_original": 0.1883
+  },
+  "supports_fraction": {
+    "original": 0.4822,
+    "claude": 0.0051,
+    "gemini": 0.0964,
+    "gpt52": 0.0051
+  },
+  "per_class_agreement": {
+    "supports": {
+      "n": 95,
+      "claude": 0.0105,
+      "gemini": 0.1474,
+      "gpt52": 0.0105
+    },
+    "extends": {
+      "n": 54,
+      "claude": 0.9815,
+      "gemini": 0.8704,
+      "gpt52": 0.8704
+    },
+    "replicates": {
+      "n": 1,
+      "claude": 1.0,
+      "gemini": 0.0,
+      "gpt52": 1.0
+    },
+    "contradicts": {
+      "n": 35,
+      "claude": 0.1143,
+      "gemini": 0.0857,
+      "gpt52": 0.1143
+    },
+    "applies": {
+      "n": 12,
+      "claude": 0.0,
+      "gemini": 0.5,
+      "gpt52": 0.8333
+    }
+  },
+  "edges": [
+    {
+      "src_id": "a6196f904762a8c6",
+      "tgt_id": "233a5ba02a0810ac",
+      "src_text": "Glutamine/Glutamate ratio distinguishes Mild/Moderate vs Severe COVID-19",
+      "tgt_text": "Amino acid metabolism alterations predicts Severe COVID-19 disease progression",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "supports"
+    },
+    {
+      "src_id": "17136d5f9e9e0d56",
+      "tgt_id": "3b60e4b614efc611",
+      "src_text": "GW625019 increases oxo-methionine",
+      "tgt_text": "oxidative damage causes complex I defect",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "2eca4a6cf6171dbf",
+      "tgt_id": "07e44ce6dfdd5c58",
+      "src_text": "expressed genes correlates_with salt stress response",
+      "tgt_text": "NaCl (salt stress) increases trehalose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "584cf3536673d94e",
+      "tgt_id": "a02e1ebd1d06ac71",
+      "src_text": "high-intensity exercise increases plasma metabolome alterations",
+      "tgt_text": "glycine metabolism pathway is_biomarker_for Atypical Myopathy",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "cf11c99c76911f6f",
+      "tgt_id": "3ad853dd9decc127",
+      "src_text": "gut microbiome dysbiosis causes colorectal cancer",
+      "tgt_text": "glycine is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "2c5dbc6b31222ff1",
+      "tgt_id": "cc51ff20a4919548",
+      "src_text": "Toxoplasma gondii infection (acute, 11 dpi) distinguishes hepatic metabolite profile",
+      "tgt_text": "Hydroxybutyrylcarnitine correlates_with Insulin resistance index (HOMA-IR)",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "97774779acc929f6",
+      "tgt_id": "743da2d05638a92c",
+      "src_text": "GC-MS with multiple extraction solvents is_biomarker_for colorectal cancer",
+      "tgt_text": "Ribitol decreases polyp lesions of APC(min/+) mice",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "6681e0fa7154e760",
+      "tgt_id": "ea04dc893b6c798a",
+      "src_text": "alanine increases colorectal cancer",
+      "tgt_text": "Urinary metabolome correlates_with Gender",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "da156e309d8aba14",
+      "tgt_id": "ffbd84c4875b36c8",
+      "src_text": "Mirabegron treats Hepatocellular Carcinoma",
+      "tgt_text": "Cold-induced BAT activation decreases blood glucose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "d024d59e503a0b44",
+      "tgt_id": "7901af614d4dad99",
+      "src_text": "Polyunsaturated fatty acid-containing Phosphatidylcholines (PCs) decreases Colorectal Carcinoma",
+      "tgt_text": "carcinoembryonic antigen (CEA) is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "e0e672f7538caff6",
+      "tgt_id": "4979fa441f6dcc5e",
+      "src_text": "long-chain and very-long-chain fatty acids is_biomarker_for colorectal adenocarcinoma",
+      "tgt_text": "pathological complete response predicts rectal cancer outcome",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "ba409647d1ada7db",
+      "tgt_id": "82a75c81cc69e002",
+      "src_text": "dual targeting of SLC6A14 and SLC12A4 decreases serine uptake",
+      "tgt_text": "SLC7A3 increases lysine uptake",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "59ed72b36bfdf1d2",
+      "tgt_id": "a3d7b78a05771c9d",
+      "src_text": "quercetin decreases colorectal cancer risk",
+      "tgt_text": "inosine is_biomarker_for 5-fluorouracil drug response",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "9ae9de55722e630f",
+      "tgt_id": "931d52e5dce697fd",
+      "src_text": "multi-dimensional leaf phenotype predicts rootstock genotype",
+      "tgt_text": "growing season time point correlates_with leaf metabolite profile",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7064332f48511665",
+      "tgt_id": "e1f8779a38c793ca",
+      "src_text": "spermidine is_biomarker_for colon cancer",
+      "tgt_text": "rosemary polyphenols treats colon cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b55315ac6f2754de",
+      "tgt_id": "543cf1e0f74c867a",
+      "src_text": "TFAM decreases TFAM expression in metastatic HCC tissues",
+      "tgt_text": "nuclear actin polymerization increases extracellular matrix remodeling gene expression",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "1f91350faa786685",
+      "tgt_id": "ae91c02d8932adb3",
+      "src_text": "hypoxanthine is_biomarker_for colon cancer",
+      "tgt_text": "fecal acetate correlates_with myo-inositol",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "2977e44859bde07a",
+      "tgt_id": "5f57a53dc80dce2d",
+      "src_text": "urinary metabolite panel (citrate, hippurate, p-cresol, 2-aminobutyrate, myristate, putrescine, kynurenate) distinguishes colorectal cancer",
+      "tgt_text": "urinary metabolite profile distinguishes colorectal cancer",
+      "original": "supports",
+      "claude": "supports",
+      "gemini": "supports",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7fe15ed7d951f7f6",
+      "tgt_id": "5fb08a975a6e100d",
+      "src_text": "myristate distinguishes colorectal cancer",
+      "tgt_text": "glutamate metabolism is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "dc373485c83a1470",
+      "tgt_id": "92fe661905d59add",
+      "src_text": "Urinary metabolome correlates_with Body Mass Index",
+      "tgt_text": "urinary metabolite panel (citrate, hippurate, p-cresol, 2-aminobutyrate, myristate, putrescine, kynurenate) is_biomarker_for colorectal cancer",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "eb43ffb76727c6d8",
+      "tgt_id": "139b70b0ec8c2cb0",
+      "src_text": "acetonitrile-isopropanol-water extraction increases fatty acid metabolite detection in HT-29 colon cancer cells",
+      "tgt_text": "difluoromethylornithine (DFMO) correlates_with reduced glutathione (GSH)",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3edb9a88379dc447",
+      "tgt_id": "b31e97b86916a1ac",
+      "src_text": "glycerophospholipids (3 metabolites, increased risk group) increases colorectal cancer risk",
+      "tgt_text": "glucose is_biomarker_for colorectal cancer liver metastasis",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "de9a2e33eb0b4fb6",
+      "tgt_id": "13822c4fe1471b16",
+      "src_text": "RasV12;scrib-/- tumor growth causes muscle atrophy",
+      "tgt_text": "host autophagy increases circulating sugars",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "f22e65f3b99cf50e",
+      "tgt_id": "d265e0a430507bd8",
+      "src_text": "17-hydroxygeranyllinalool diterpene glycosides decreases herbivore defense",
+      "tgt_text": "HGL-DTG pathway QTL predicts HGL-DTG accumulation",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "5a27794ca006f48f",
+      "tgt_id": "f9292600a898cdcc",
+      "src_text": "citrate distinguishes colorectal cancer",
+      "tgt_text": "GC/MS metabolic profile distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "33533337a67b3af3",
+      "tgt_id": "c291dbdd143c114e",
+      "src_text": "Butanoate metabolite increases Alpha-diversity of gut microbiome",
+      "tgt_text": "L-glutamate is_biomarker_for colon adenomatous polyps",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "ceaf6a4c39f6d629",
+      "tgt_id": "cc51ff20a4919548",
+      "src_text": "Hydroxybutyrylcarnitine correlates_with Glycated hemoglobin (HbA1c)",
+      "tgt_text": "Hydroxybutyrylcarnitine correlates_with Insulin resistance index (HOMA-IR)",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "4f7139b1825d9461",
+      "tgt_id": "80a3bb84628584af",
+      "src_text": "GLPG1690 treats colorectal cancer",
+      "tgt_text": "\u03b2-hydroxybutyrate is_biomarker_for Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "bd2a18dc63a847af",
+      "tgt_id": "ae86d2afc0dc5d51",
+      "src_text": "Dual-column LC-HRMS xenobiotic LOD in plasma is_biomarker_for xenobiotics and human estrogens in plasma",
+      "tgt_text": "Oxaliplatin distinguishes HCT116 oxaliplatin-sensitive vs. oxaliplatin-resistant colon cancer cells",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7c0a44eef9f07abe",
+      "tgt_id": "bb313c103d3f8b81",
+      "src_text": "Lipid panel (PC 44:5 + PC 35:6e + SM d40:3) distinguishes colorectal advanced adenoma vs colorectal cancer",
+      "tgt_text": "Phosphatidylcholine increases Colorectal Cancer tumor progression",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "6431cbea436ff794",
+      "tgt_id": "9ae9de55722e630f",
+      "src_text": "leaf proline is_biomarker_for rootstock genotype",
+      "tgt_text": "multi-dimensional leaf phenotype predicts rootstock genotype",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "a4519b1677743e79",
+      "tgt_id": "2023999114e19ee1",
+      "src_text": "PP242 inhibits fatty acid beta-oxidation",
+      "tgt_text": "Flexibilide treats Colon cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3e598b3b9067d2e0",
+      "tgt_id": "139b70b0ec8c2cb0",
+      "src_text": "acidified water extraction increases amino acid metabolite detection in HT-29 colon cancer cells",
+      "tgt_text": "difluoromethylornithine (DFMO) correlates_with reduced glutathione (GSH)",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "79cb8fcef4a28b5d",
+      "tgt_id": "02b896c3a9861aca",
+      "src_text": "Candida albicans (bloodborne infection) decreases Lactobacillus",
+      "tgt_text": "Platycodins Folium increases SOD",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b3ade0e6249bf923",
+      "tgt_id": "886f0caf3c30fe23",
+      "src_text": "TFAM is_biomarker_for hepatocellular carcinoma overall survival",
+      "tgt_text": "malonyl-CoA causes mDia2 malonylation",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "61d3745f0e503f10",
+      "tgt_id": "f1c8db3f597d510b",
+      "src_text": "MALDI-MS metabolic profiles distinguishes late blight infected vs. healthy asymptomatic tomato plants",
+      "tgt_text": "Rhizoctonia solani infection increases flavonoids",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "e0900715a00c585e",
+      "tgt_id": "f2477f3132d5ebe8",
+      "src_text": "Unsaturated fatty acids is_biomarker_for Colorectal Cancer",
+      "tgt_text": "oxaliplatin decreases neutral lipid metabolism",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "b8a4eca4314d3241",
+      "tgt_id": "7a0f9d8115912da9",
+      "src_text": "Onvansertib causes cell cycle arrest",
+      "tgt_text": "polyunsaturated fatty acid-containing lipids is_biomarker_for colon cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "2f19093bd04e37e9",
+      "tgt_id": "861541e0e69752e4",
+      "src_text": "C26:0-OH (2-hydroxyhexacosanoic acid) decreases colorectal cancer",
+      "tgt_text": "beta-oxidation decreases colon cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "9928a30485db1e0a",
+      "tgt_id": "b8f182218b41caec",
+      "src_text": "metabolic biomarkers is_biomarker_for colorectal cancer",
+      "tgt_text": "Taurine distinguishes Pathological complete response vs non-complete response in rectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7be939a27b92bfa4",
+      "tgt_id": "a09b0eddce81cd82",
+      "src_text": "Lysophospholipids is_biomarker_for Colorectal Cancer",
+      "tgt_text": "oxaliplatin increases phosphatidylglycerol (PG)",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7f9ac3cacb789536",
+      "tgt_id": "7ff727659ec937de",
+      "src_text": "hypoxanthine is_biomarker_for colorectal cancer precursor lesions (polyposis)",
+      "tgt_text": "purine metabolism is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "8ddc19efefc1659b",
+      "tgt_id": "86d718ec7d4fa152",
+      "src_text": "PC 35:6e distinguishes colorectal advanced adenoma vs colorectal cancer",
+      "tgt_text": "Ethanolamine plasmalogens (PlsEtn) is_biomarker_for Colorectal cancer (early stage)",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "c57ef4534900df50",
+      "tgt_id": "6000b56d3b723162",
+      "src_text": "all-trans-retinoic acid is_biomarker_for colon cancer",
+      "tgt_text": "fecal acetate correlates_with glucose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "ad8aa4344ec56873",
+      "tgt_id": "84d17a2ec9252bb9",
+      "src_text": "Filtering pipeline (blank + RSD + missing value) decreases number of LC-MS features retained after filtering",
+      "tgt_text": "Urinary metabolome distinguishes Gender",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "61d3745f0e503f10",
+      "tgt_id": "7c2e74c7119e3470",
+      "src_text": "MALDI-MS metabolic profiles distinguishes late blight infected vs. healthy asymptomatic tomato plants",
+      "tgt_text": "Rhizoctonia solani infection decreases sucrose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "a55e0799b7bc1ba6",
+      "tgt_id": "70480b56249025c9",
+      "src_text": "Combined NMR and LC/MS metabolomics panel distinguishes Polyps vs Healthy Controls",
+      "tgt_text": "urinary metabolomics NMR classifier predicts requirement for colonoscopy",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "54e91a4f5c39fb5a",
+      "tgt_id": "eabd8659a1c2f7de",
+      "src_text": "glycerophosphocholine increases hPSC-derived cardiomyocyte maturation",
+      "tgt_text": "Veliparib increases threonine",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "94451c7b9cc77265",
+      "tgt_id": "0339aef4cd538692",
+      "src_text": "hydrogen sulfide is_metabolite_of Desulfovibrio desulfuricans",
+      "tgt_text": "Prevotella predicts FOLFOX response in colon cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "03e1b9a0e05de08d",
+      "tgt_id": "cf6103b5f6bf50ba",
+      "src_text": "Galium species increases species-specific root exudate metabolites",
+      "tgt_text": "environmental conditions correlates_with grass root exudate composition",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "d024d59e503a0b44",
+      "tgt_id": "eed466c7df2fd071",
+      "src_text": "Polyunsaturated fatty acid-containing Phosphatidylcholines (PCs) decreases Colorectal Carcinoma",
+      "tgt_text": "hydroxylated polyunsaturated ultra long-chain fatty acids (HC\u226526) decreases colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "862e7f41379db8df",
+      "tgt_id": "6f2a683432e60812",
+      "src_text": "Creatinine correlates_with Age",
+      "tgt_text": "UHPLC-LTQ-Orbitrap ESI-MS metabolomics distinguishes human adult urinary metabolome features",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8ab09f7270ef04cb",
+      "tgt_id": "9569a67644e3039f",
+      "src_text": "amino acids and N-containing metabolites is_biomarker_for Primitivo wine",
+      "tgt_text": "iron correlates_with arginine",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "edaa2aacc5e1c134",
+      "tgt_id": "a69371ac9197bcf6",
+      "src_text": "herbivory-induced secondary metabolites distinguishes Nicotiana attenuata accessions",
+      "tgt_text": "simulated herbivory (wounding + Manduca sexta elicitors) distinguishes Nicotiana attenuata leaf metabolome",
+      "original": "replicates",
+      "claude": "replicates",
+      "gemini": "extends",
+      "gpt52": "replicates"
+    },
+    {
+      "src_id": "5266d002242de83b",
+      "tgt_id": "a16d02f5283b6fe4",
+      "src_text": "ether phospholipids decreases advanced stage colorectal cancer",
+      "tgt_text": "MYC causes metabolic reprogramming in colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "3e864fffba41a4ce",
+      "tgt_id": "d6e3de0ff24c0c48",
+      "src_text": "VAPA predicts overall survival of colorectal cancer patients",
+      "tgt_text": "metabolic aging clock (9-metabolite panel) distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "8696d8df73cc0a15",
+      "tgt_id": "2188c28c7f73ddda",
+      "src_text": "commensal bacteria correlates_with putrescine",
+      "tgt_text": "cysteine is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "e203df3cd2df4565",
+      "tgt_id": "4aaba57cec01b3be",
+      "src_text": "caffeoylated HGL-DTG is_metabolite_of Manduca sexta",
+      "tgt_text": "chlorogenic acids decreases herbivore defense",
+      "original": "extends",
+      "claude": "contradicts",
+      "gemini": "extends",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "5076cc91767cbdde",
+      "tgt_id": "77c8317d3313ea24",
+      "src_text": "Celastrol increases Tryptophan",
+      "tgt_text": "Flexibilide decreases Sphingolipids",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7be939a27b92bfa4",
+      "tgt_id": "109b127284898c58",
+      "src_text": "Lysophospholipids is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Simple glycosphingolipids is_biomarker_for Non-response to neoadjuvant chemoradiotherapy in rectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "fbddabef2bccbbf8",
+      "tgt_id": "62d946c10b2c5b02",
+      "src_text": "ceramides is_biomarker_for colorectal adenocarcinoma tissue",
+      "tgt_text": "panel of 9 independently associated metabolites distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "523a1c782fd8dd84",
+      "tgt_id": "3aa5bd7df58f2453",
+      "src_text": "nitrate correlates_with tyrosine metabolism",
+      "tgt_text": "glycine, serine and threonine metabolism activates Colorectal Cancer",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "6c5ca64cb6f7ead8",
+      "tgt_id": "bc3e6e2c4afb6047",
+      "src_text": "nitrogen supplementation increases oat grain yield",
+      "tgt_text": "Nitrogen supplementation increases beta-glucan",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "dec5c4119bcf8d8a",
+      "tgt_id": "a286575c4b08c9fc",
+      "src_text": "Triacylglycerol TG 56:4 is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Diacylglycerophosphates (PA) is_biomarker_for Colorectal cancer (early stage)",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "5b6b4080df297447",
+      "tgt_id": "15eade4fd685a192",
+      "src_text": "Membrane biosynthesis/degradation metabolites distinguishes Colorectal Cancer tissue vs adjacent non-involved tissue",
+      "tgt_text": "HMGA1 activates fatty acid synthesis",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7eb409c76d4a194c",
+      "tgt_id": "87f58bba8b521769",
+      "src_text": "lysophosphatidylcholines correlates_with rectal cancer disease stage",
+      "tgt_text": "Glyoxylate and dicarboxylate metabolism pathway distinguishes average-onset colorectal cancer vs early-onset colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "e432f8d4bc9fc2c1",
+      "tgt_id": "aba16d203b4c0915",
+      "src_text": "flavanols is_biomarker_for Aglianico wine",
+      "tgt_text": "oxygen (micro-oxygenation) correlates_with succinic acid",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b31e97b86916a1ac",
+      "tgt_id": "f85cc0e4c3d671a6",
+      "src_text": "glucose is_biomarker_for colorectal cancer liver metastasis",
+      "tgt_text": "p-cresol distinguishes colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "c3212d88631bfb54",
+      "tgt_id": "54265fabcfbbea5b",
+      "src_text": "Diallyl Disulfide increases Oscillibacter abundance",
+      "tgt_text": "Candida albicans (bloodborne infection) is_biomarker_for candidemia",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "f75d36eeb875872c",
+      "tgt_id": "c64aff8d63744d76",
+      "src_text": "13-keto-1,11-dolabell-3(E),7(E),12(18)-triene distinguishes cytotoxic vs non-cytotoxic soft coral extracts (A549)",
+      "tgt_text": "Pyruvate is_biomarker_for Colorectal Cancer",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "f6fb9b6828523082",
+      "tgt_id": "3a8046add935925b",
+      "src_text": "bile acids treats colorectal cancer",
+      "tgt_text": "Zizyphus jujuba cv. Muzao polysaccharides increases amino acids",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8fd3765ebc529aa9",
+      "tgt_id": "20b11e9574370b5b",
+      "src_text": "acyl-alkylphosphatidylcholines decreases total fatigue",
+      "tgt_text": "Phosphatidylcholine (diacyl) C32:0 increases Colorectal Cancer Stage IV",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "c9e8da65fb5dd544",
+      "tgt_id": "1a7213d2f92efaa0",
+      "src_text": "Azithromycin increases SOCS1 expression",
+      "tgt_text": "indole-3-acetic acid decreases acute graft-versus-host disease",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "c4922dc8d24e5d20",
+      "tgt_id": "71903b46c32d3e2b",
+      "src_text": "short-chain fatty acids correlates_with gut homeostasis",
+      "tgt_text": "Gut microbiome composition distinguishes Crohn's Disease converters vs non-converters",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "e6cdabf5dd6b8eeb",
+      "tgt_id": "e461fd5676f370d7",
+      "src_text": "3PO increases Lactate",
+      "tgt_text": "Neutrophil metabolome (RA vs HC) distinguishes Rheumatoid Arthritis",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "9df13dcb4529bd3d",
+      "tgt_id": "b8f182218b41caec",
+      "src_text": "Untargeted metabolite profiles distinguishes Rice hybrid population structure",
+      "tgt_text": "Taurine distinguishes Pathological complete response vs non-complete response in rectal cancer",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "a398abbade941db1",
+      "tgt_id": "58b41dc847c7d20b",
+      "src_text": "low-dose ionizing radiation causes metabolic phenotype changes",
+      "tgt_text": "Veliparib correlates_with radiation metabolic response in HCC1937 (BRCA-mutant) cells",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "11a05f5844d42b62",
+      "tgt_id": "10b690c0cad0deb4",
+      "src_text": "Metabolomics panel distinguishes Colorectal Cancer",
+      "tgt_text": "hippurate distinguishes colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "4e8c3e1d7977e813",
+      "tgt_id": "bc7d1a9e0ec934df",
+      "src_text": "sphingomyelin is_biomarker_for colorectal advanced adenoma",
+      "tgt_text": "Methionine + Tyrosine + Valine + Isoleucine panel distinguishes Colorectal Cancer vs Advanced Adenoma",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "590e5ebf9fbb8ef6",
+      "tgt_id": "7a61f5127ff4ee48",
+      "src_text": "metabonomics predicts colorectal cancer",
+      "tgt_text": "glucose distinguishes colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "fbddabef2bccbbf8",
+      "tgt_id": "f2477f3132d5ebe8",
+      "src_text": "ceramides is_biomarker_for colorectal adenocarcinoma tissue",
+      "tgt_text": "oxaliplatin decreases neutral lipid metabolism",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "62c3e4e497077b9d",
+      "tgt_id": "3cd501de2551c2df",
+      "src_text": "gut microbiome dysbiosis causes metabolic dysfunction",
+      "tgt_text": "gut microbiome composition distinguishes Familial dysautonomia patients vs healthy cohabitating relatives",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "49cbcdffca54395a",
+      "tgt_id": "6254b55230ddc84e",
+      "src_text": "Willow Bark Extract increases Bacteroides sp.",
+      "tgt_text": "NAC154 overexpression decreases sucrose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7cfcbb3a9780f36b",
+      "tgt_id": "4c46687c376ebdb5",
+      "src_text": "Bacteroidetes is_metabolite_of N-acyl ornithine (NAOrn)",
+      "tgt_text": "Prostaglandin E2 increases Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "1079d4ecf1f2ac14",
+      "tgt_id": "d7102117614897e4",
+      "src_text": "TTD metabolites in plasma is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Kynurenine/Tryptophan ratio is_biomarker_for Colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b31e97b86916a1ac",
+      "tgt_id": "89bc9c569077e1c3",
+      "src_text": "glucose is_biomarker_for colorectal cancer liver metastasis",
+      "tgt_text": "GOT-MS distinguishes colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "efb159d8104beda2",
+      "tgt_id": "87bcc68b16bc437c",
+      "src_text": "eicosapentaenoic acid treats colitis-associated colorectal cancer",
+      "tgt_text": "Oleic acid increases Colorectal cancer",
+      "original": "contradicts",
+      "claude": "contradicts",
+      "gemini": "contradicts",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3edb9a88379dc447",
+      "tgt_id": "cbeb78b603c334c6",
+      "src_text": "glycerophospholipids (3 metabolites, increased risk group) increases colorectal cancer risk",
+      "tgt_text": "Metabolomics panel predicts Colorectal Cancer recurrence",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "37640db26c967a32",
+      "tgt_id": "335751fbc196bf01",
+      "src_text": "nitisinone causes Anopheles gambiae mortality",
+      "tgt_text": "nitisinone treats African trypanosomiasis",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "4d490d6332335a4a",
+      "tgt_id": "dae38772ee64d3e3",
+      "src_text": "Phosphatidylcholines (PCs) is_biomarker_for Colorectal Carcinoma",
+      "tgt_text": "ZY0511 decreases phosphatidylethanolamine",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8f76b4c2187edccd",
+      "tgt_id": "0c1686b0bcc782a0",
+      "src_text": "hydroxycinnamates is_biomarker_for Cannonau wine",
+      "tgt_text": "oxygen (micro-oxygenation) correlates_with proline",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "61d3745f0e503f10",
+      "tgt_id": "e41c9ab08d962747",
+      "src_text": "MALDI-MS metabolic profiles distinguishes late blight infected vs. healthy asymptomatic tomato plants",
+      "tgt_text": "Rhizoctonia solani infection activates isoflavonoid biosynthetic pathway",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b8c8128ff8acb59a",
+      "tgt_id": "d77e7358da5ee742",
+      "src_text": "Urine physiological concentration correlates_with individual variability in health and hydration status",
+      "tgt_text": "creatinine normalization decreases statistical discrimination in urine metabolomics",
+      "original": "applies",
+      "claude": "contradicts",
+      "gemini": "contradicts",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "13796e50b0608f95",
+      "tgt_id": "91c446c262d94134",
+      "src_text": "Glutamic acid increases COVID-19",
+      "tgt_text": "Tryptophan metabolism correlates_with Severe COVID-19 immune response",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "c36d04bfb5adcd28",
+      "tgt_id": "e7e58d40df138be2",
+      "src_text": "Berberine increases Bacteroides uniformis",
+      "tgt_text": "Berberine decreases Verrucomicrobia",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "ef3bfc04da78d9ed",
+      "tgt_id": "6e1188f0800f7f08",
+      "src_text": "terpene metabolites correlates_with berry development stage",
+      "tgt_text": "volatile terpenes is_biomarker_for Muscat-type grape aroma",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "99363b5c93ff71bb",
+      "tgt_id": "c92a373ef1ba1de6",
+      "src_text": "arginine-enriched tetra-peptide fragments increases Hmga1 transgenic mice with polyposis",
+      "tgt_text": "candidate biomarker metabolites is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "0fe5441e864355c6",
+      "tgt_id": "5d2ca41a15b47d5b",
+      "src_text": "energy stress inhibits lipid peroxidation",
+      "tgt_text": "centWave increases number of detected metabolite features in human urine LC/MS",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "5eb0d1ca80017acb",
+      "tgt_id": "2cb255a29cdd6863",
+      "src_text": "13C9-phenylalanine tracer labeling distinguishes phenylalanine-derived submetabolome",
+      "tgt_text": "MatchWeiz predicts metabolite identity in model and exotic plants",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "15709a5e8bd22547",
+      "tgt_id": "53092e5f851faacd",
+      "src_text": "Kynurenine is_biomarker_for Colorectal cancer stage",
+      "tgt_text": "Colorectal cancer omics biomarkers is_biomarker_for Colorectal Cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "f2b187f61d2a57aa",
+      "tgt_id": "367abe64d5d037b2",
+      "src_text": "Matairesinol decreases ATP production",
+      "tgt_text": "Phosphatidylethanolamine increases Colorectal Cancer tumor progression",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "f96b8d32ce0c2e8e",
+      "tgt_id": "8f2c4890eae765fd",
+      "src_text": "Indoleamine 2,3-dioxygenase (IDO) is_metabolite_of Tryptophan catabolism to Kynurenine",
+      "tgt_text": "Flexibilide causes Cell apoptosis",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7c0a44eef9f07abe",
+      "tgt_id": "c9058a5d22ba0bee",
+      "src_text": "Lipid panel (PC 44:5 + PC 35:6e + SM d40:3) distinguishes colorectal advanced adenoma vs colorectal cancer",
+      "tgt_text": "glycerolipid metabolism activates Colorectal Polyp",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8855dd7d8927af48",
+      "tgt_id": "1efa518a74ab1769",
+      "src_text": "MAP2K5 SNP correlates_with gut microbial metabolites",
+      "tgt_text": "urinary metabolite panel (3-metabolite logistic regression model) distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "24fd48a4a72b336c",
+      "tgt_id": "8112866661165457",
+      "src_text": "raf15 mutant decreases ABA-triggered SnRK2.6/OST1 activation",
+      "tgt_text": "elevated CO2 decreases stomatal aperture",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "2bd5b3a3bf6e13d7",
+      "tgt_id": "3df580ab38d348dd",
+      "src_text": "sphingosine is_biomarker_for IAV pneumonia",
+      "tgt_text": "1918 H1N1 influenza virus increases T cell subpopulation enrichment (trachea)",
+      "original": "contradicts",
+      "claude": null,
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "f0737c1eb31546ec",
+      "tgt_id": "8c56aab769227f47",
+      "src_text": "metabolic fingerprinting is_biomarker_for colorectal cancer",
+      "tgt_text": "Fecal metabonomic profile (GC/TOFMS) predicts Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "replicates"
+    },
+    {
+      "src_id": "b97b61c30a267b5b",
+      "tgt_id": "cee6c37c50d7819d",
+      "src_text": "juglone causes allelopathy",
+      "tgt_text": "JrMYB5 activates juglone biosynthesis",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "61130e0fec38a3ad",
+      "tgt_id": "99a0e9dbf318bdf8",
+      "src_text": "plasma metabolites correlates_with persistent fatigue in colorectal cancer survivors",
+      "tgt_text": "amino acids (plasma) decreases total fatigue",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "95c047c5809cf90e",
+      "tgt_id": "923b6555d7799825",
+      "src_text": "Plasma metabolite panel (29 metabolites) distinguishes Colorectal Cancer (Stage 0/I/II)",
+      "tgt_text": "C30:2-OH (2-hydroxytriacontenoic acid) decreases colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "0d3ac63cb558fadd",
+      "tgt_id": "cbeb78b603c334c6",
+      "src_text": "Phosphatidylcholine PC 37:1 is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Metabolomics panel predicts Colorectal Cancer recurrence",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "984990d22170d58d",
+      "tgt_id": "c9058a5d22ba0bee",
+      "src_text": "total trihalomethanes correlates_with cytochrome P-450 metabolism",
+      "tgt_text": "glycerolipid metabolism activates Colorectal Polyp",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "2c5dbc6b31222ff1",
+      "tgt_id": "c85d959092240c0c",
+      "src_text": "Toxoplasma gondii infection (acute, 11 dpi) distinguishes hepatic metabolite profile",
+      "tgt_text": "Hydroxybutyrylcarnitine correlates_with Fasting plasma glucose",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "d424300b34f00439",
+      "tgt_id": "4f7b54b871b67911",
+      "src_text": "Veliparib increases glycine",
+      "tgt_text": "NAD+ is_biomarker_for PARP activation / DNA damage response",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8477d23a810774c9",
+      "tgt_id": "053d8fa79f782e63",
+      "src_text": "PC(18:0/18:1) distinguishes Colorectal Cancer",
+      "tgt_text": "lyso-phosphatidylinositols is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "c9b345d6edf6e0be",
+      "tgt_id": "0c1686b0bcc782a0",
+      "src_text": "flavanols is_biomarker_for Nebbiolo wine",
+      "tgt_text": "oxygen (micro-oxygenation) correlates_with proline",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "d04164195cd45ff3",
+      "tgt_id": "99575695009012ad",
+      "src_text": "triacylglycerol biosynthesis treats cell division failure in cwh43 mutant",
+      "tgt_text": "ATP correlates_with nitrogen starvation response in S. pombe",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7896c61b911bbef2",
+      "tgt_id": "87f58bba8b521769",
+      "src_text": "adipose tissue glutamine decreases advanced stage rectal cancer",
+      "tgt_text": "Glyoxylate and dicarboxylate metabolism pathway distinguishes average-onset colorectal cancer vs early-onset colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "09a153c7f63f62e6",
+      "tgt_id": "fa0adf1cbd0f411e",
+      "src_text": "Chromosome copy number (aneuploidy) increases transcript abundance",
+      "tgt_text": "membrane lipids distinguishes ISC1 vs Core Group Leishmania donovani",
+      "original": "supports",
+      "claude": null,
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "82a3bed01a275c34",
+      "tgt_id": "b1712dd89d9a1101",
+      "src_text": "Lysophosphatidylcholine (LPC) distinguishes Brivanib-induced hypertension",
+      "tgt_text": "Brivanib-induced hypertension predicts Overall survival in metastatic colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "2a47065763d37d76",
+      "tgt_id": "950393b789e1afdc",
+      "src_text": "Purines distinguishes COVID-19 clinical stages",
+      "tgt_text": "phosphatidylcholine 14:0_22:6 is_biomarker_for COVID-19",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3e598b3b9067d2e0",
+      "tgt_id": "743da2d05638a92c",
+      "src_text": "acidified water extraction increases amino acid metabolite detection in HT-29 colon cancer cells",
+      "tgt_text": "Ribitol decreases polyp lesions of APC(min/+) mice",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "95d6d344b31a96cc",
+      "tgt_id": "3a16c2ea929bb850",
+      "src_text": "Guard cells increases flavone metabolites",
+      "tgt_text": "elevated CO2 activates jasmonic acid biosynthesis pathway",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "d0b04d5766704fa5",
+      "tgt_id": "75a24f6e37713eb4",
+      "src_text": "Hippocampus metabolites panel (11 metabolites) is_biomarker_for Major Depressive Disorder",
+      "tgt_text": "Serum metabolic profiling (PLS-DA) distinguishes Colorectal Cancer vs Healthy Controls",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "0903f5dfbc6f2796",
+      "tgt_id": "bd365130be4f65e9",
+      "src_text": "Pantothenate is_biomarker_for Colorectal Adenoma",
+      "tgt_text": "Threonine decreases Growing Colorectal Adenoma",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "af880b026ff8355e",
+      "tgt_id": "fe2ddb79f121c063",
+      "src_text": "Caulerpa lentillifera polysaccharide inhibits LoVo colon cancer cells (monolayer)",
+      "tgt_text": "Curcumin inhibits Lung Cancer",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7bc5298dec9b472a",
+      "tgt_id": "6ff3437dde7e13a8",
+      "src_text": "plant-based origin molecules increases infant stool metabolite abundance",
+      "tgt_text": "perfluorinated alkylated substances (PFAS) is_biomarker_for neonatal chemical contamination",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "6ad1651b9e44eeed",
+      "tgt_id": "6c84cae0519a5137",
+      "src_text": "Fatty acids is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Panel of five metabolites (succinate, N2,N2-dimethylguanosine, adenine, citraconic acid, 1-methylguanosine) distinguishes Colorectal cancer progression",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "724f0b0fc0ee1455",
+      "tgt_id": "746f6a9784629cd2",
+      "src_text": "Tyrosine metabolism pathway metabolites is_biomarker_for Toxoplasma gondii acute infection",
+      "tgt_text": "Xanthine is_biomarker_for Toxoplasmosis",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b3471fc86dfe0573",
+      "tgt_id": "d9908621d96cec04",
+      "src_text": "17-plasma metabolite panel distinguishes Colorectal cancer",
+      "tgt_text": "sterol lipids is_biomarker_for neurodegenerative diseases",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "92fe661905d59add",
+      "tgt_id": "0e947e9b69b16608",
+      "src_text": "urinary metabolite panel (citrate, hippurate, p-cresol, 2-aminobutyrate, myristate, putrescine, kynurenate) is_biomarker_for colorectal cancer",
+      "tgt_text": "TCA cycle metabolites decreases postoperative colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7be939a27b92bfa4",
+      "tgt_id": "4dadce8c99c8718e",
+      "src_text": "Lysophospholipids is_biomarker_for Colorectal Cancer",
+      "tgt_text": "reactive oxygen species deficiency causes inflammatory bowel disease",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8dd8442fd3a807c3",
+      "tgt_id": "8457ce0071ce963e",
+      "src_text": "3-Aminoisobutyrate is_biomarker_for colorectal cancer",
+      "tgt_text": "Colorectal Cancer (preoperative) increases Low-molecular weight compound MW 283",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "099a9ce57cdf314e",
+      "tgt_id": "e8a1003a1be6c570",
+      "src_text": "ectoine distinguishes sexual reproduction phase vs vegetative phase in Pseudo-nitzschia multistriata",
+      "tgt_text": "acylcarnitines is_biomarker_for cobalamin limitation",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "5deeaeb373dc1b1c",
+      "tgt_id": "bea663ffb7909601",
+      "src_text": "cwh43 mutation causes loss of viability during quiescence under nitrogen starvation",
+      "tgt_text": "2-oxoglutarate increases nitrogen starvation response in S. pombe",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "5a5b483132dcef3d",
+      "tgt_id": "7c948f24ef844d81",
+      "src_text": "Linoleic acid is_biomarker_for Colorectal Cancer",
+      "tgt_text": "glycolysis pathway metabolites is_biomarker_for Colorectal Cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "15709a5e8bd22547",
+      "tgt_id": "8048666659750fb3",
+      "src_text": "Kynurenine is_biomarker_for Colorectal cancer stage",
+      "tgt_text": "glycerophospholipids decreases colorectal cancer liver metastasis (tumor-bearing liver)",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "48acf1f78ee7116e",
+      "tgt_id": "f7ce72ea40935a90",
+      "src_text": "adipose tissue metabolome predicts tumour invasiveness in rectal cancer",
+      "tgt_text": "serotonin is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "d0b01d81705b3694",
+      "tgt_id": "085d425052ce8882",
+      "src_text": "N-nitrosodimethylamine (NDMA) correlates_with Colorectal Cancer progression",
+      "tgt_text": "taurine decreases colorectal cancer liver metastasis",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "2c6033008b70ea79",
+      "tgt_id": "810a7e4299423912",
+      "src_text": "Cluster 3 (uniform lipid and amino acid levels) predicts colorectal cancer prognosis",
+      "tgt_text": "essential amino acid metabolism predicts nCRT therapeutic response in rectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "d4126029e35ad072",
+      "tgt_id": "bf462b84731cd037",
+      "src_text": "gut microbiota composition predicts GLPG1690 efficacy",
+      "tgt_text": "Tyrosine predicts Early-Stage Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "9d24d0814368d892",
+      "tgt_id": "5a27794ca006f48f",
+      "src_text": "Urine NMR metabolomics (OPLS-DA) predicts pre-invasive colorectal neoplasia",
+      "tgt_text": "citrate distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "fc35fbeafad8cc53",
+      "tgt_id": "1a7f551f20bcb188",
+      "src_text": "Quinolinic acid increases Colorectal cancer",
+      "tgt_text": "cotinine is_biomarker_for current smoking",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "b0934b7e792b3dc7",
+      "tgt_id": "3277beb972cb2688",
+      "src_text": "acyl carnitines correlates_with sex disparity in nCRT-induced diarrhea",
+      "tgt_text": "Serum purine metabolites (hypoxanthine, xanthine, inosine) is_biomarker_for Locally advanced rectal cancer pathological complete response",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "76f5a1b5f6a219f3",
+      "tgt_id": "7826d9c1b7280866",
+      "src_text": "DecoID increases number of identified metabolites in data-independent acquisition MS/MS datasets",
+      "tgt_text": "Ketogenic Diet activates fatty acid transport",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "f3c0ecc11e6b611d",
+      "tgt_id": "6f503a27b0bc85c5",
+      "src_text": "Tmem135 mutation (over-fused mitochondria) increases malate",
+      "tgt_text": "Veliparib increases taurine",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "22d337c2d3a7855a",
+      "tgt_id": "1a35f846ba90e6d9",
+      "src_text": "tumor-associated macrophage metabolic signatures correlates_with macrophage polarization diversity (scRNA-seq atlas)",
+      "tgt_text": "FACS (fluorescence-activated cell sorting) increases taurine",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "ee7b54ab62786c61",
+      "tgt_id": "e466b2212b92bb78",
+      "src_text": "glutamine is_biomarker_for rectal cancer disease stage",
+      "tgt_text": "polyamine pathway metabolites (urinary) increases colorectal cancer stage progression",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "7124147fc1d9550b",
+      "tgt_id": "e432f8d4bc9fc2c1",
+      "src_text": "Ulmus parvifolia seeds metabolome distinguishes Ulmus parvifolia bark metabolome",
+      "tgt_text": "flavanols is_biomarker_for Aglianico wine",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7d1d19805ab3879d",
+      "tgt_id": "bddfdd605d398677",
+      "src_text": "nitrogen supplementation increases nitrogen-containing lipid levels in oat grain",
+      "tgt_text": "Nitrogen supplementation increases protein content",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "d2f2d64e2fd73655",
+      "tgt_id": "06d903b7f7b61504",
+      "src_text": "glutamate increases colorectal cancer",
+      "tgt_text": "glucose decreases colorectal cancer liver metastasis (tumor-bearing liver)",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "contradicts",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "6e50bfde7be4ca25",
+      "tgt_id": "ae88f29967f8056c",
+      "src_text": "Celastrol decreases Kynurenine",
+      "tgt_text": "anthricin decreases HCT116 colorectal cancer cell proliferation",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "6681e0fa7154e760",
+      "tgt_id": "ea02782f34d6a23c",
+      "src_text": "alanine increases colorectal cancer",
+      "tgt_text": "Urine metabolites (108) is_biomarker_for Gender",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "6fad27e057558122",
+      "tgt_id": "5e0f5fc84d6be2b9",
+      "src_text": "Toxoplasma gondii infection correlates_with amino acid metabolism",
+      "tgt_text": "Lysophosphatidylcholine (18:0) correlates_with Insulin resistance index (HOMA-IR)",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8a08715790ab7156",
+      "tgt_id": "6731a61527be13c8",
+      "src_text": "DG 40:4 is_biomarker_for colorectal cancer",
+      "tgt_text": "Phospholipid profile is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "b95acaf38ed6700f",
+      "tgt_id": "d98dffe6374632cd",
+      "src_text": "Linoleate metabolites is_biomarker_for Colorectal cancer",
+      "tgt_text": "Spinach (freeze-dried) decreases colon adenomatous polyps",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "467cb1cf8f538733",
+      "tgt_id": "86d718ec7d4fa152",
+      "src_text": "Phosphatidylethanolamine PE 34:2 correlates_with Bisphenol A",
+      "tgt_text": "Ethanolamine plasmalogens (PlsEtn) is_biomarker_for Colorectal cancer (early stage)",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3d0a94a0b2d89900",
+      "tgt_id": "ce532437c6d43088",
+      "src_text": "Taurine correlates_with Pathological complete response to chemoradiation in rectal cancer",
+      "tgt_text": "succinate increases colorectal cancer",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "3aa8e787caab3060",
+      "tgt_id": "54245c9d8ce35c45",
+      "src_text": "Floris Sophorae Powder inhibits KRAS",
+      "tgt_text": "sphingomyelin (SM d18:1/16:0) is_biomarker_for Metastatic Colorectal Cancer",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "ff920b514f2a56a8",
+      "tgt_id": "b55315ac6f2754de",
+      "src_text": "TFAM deficiency causes lung metastasis",
+      "tgt_text": "TFAM decreases TFAM expression in metastatic HCC tissues",
+      "original": "contradicts",
+      "claude": "contradicts",
+      "gemini": "supports",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "4ee694bde1a9825f",
+      "tgt_id": "aed647ed66ac1f34",
+      "src_text": "SNPs distinguishes Camellia sinensis phylogenetic clades",
+      "tgt_text": "Aroma precursors increases White tea vs green and black tea",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "81b426b94f7c79ec",
+      "tgt_id": "4127fff45f85a81a",
+      "src_text": "GSTM3 is_biomarker_for colorectal cancer",
+      "tgt_text": "Matairesinol decreases Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "38aa223e7b1205db",
+      "tgt_id": "112e93079e7c8564",
+      "src_text": "gut microbiota composition correlates_with energy metabolism alteration",
+      "tgt_text": "tocotrienols is_biomarker_for frailty",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "45c3661957d58acf",
+      "tgt_id": "db11e897aa2cfe93",
+      "src_text": "phytol decreases sexual reproduction phase in Pseudo-nitzschia multistriata",
+      "tgt_text": "Centropages typicus grazer cues decreases Skeletonema marinoi chain length",
+      "original": "extends",
+      "claude": null,
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "dd28a089ae91b87a",
+      "tgt_id": "7ff727659ec937de",
+      "src_text": "N-oleoylglycine is_biomarker_for Metastatic Colorectal Cancer",
+      "tgt_text": "purine metabolism is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "3e598b3b9067d2e0",
+      "tgt_id": "3e6d2481545ee1e9",
+      "src_text": "acidified water extraction increases amino acid metabolite detection in HT-29 colon cancer cells",
+      "tgt_text": "Krebs cycle metabolites is_biomarker_for Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "6681e0fa7154e760",
+      "tgt_id": "2e22daa66e76c4ca",
+      "src_text": "alanine increases colorectal cancer",
+      "tgt_text": "acetate is_biomarker_for colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "33c1bd24560f4c3e",
+      "tgt_id": "a7bc64c8f5104982",
+      "src_text": "mitochondrial pyruvate import inhibition increases T. congolense sensitivity",
+      "tgt_text": "glycerol increases tricarboxylic acid cycle flux",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "684974a9fa0b72b5",
+      "tgt_id": "f314ef99c7956233",
+      "src_text": "partial loss of DHFR activity causes E. coli filamentation",
+      "tgt_text": "intracellular dTTP drop causes E. coli filamentation",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "supports",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "a554a9806de1afff",
+      "tgt_id": "760a9d763e59f3da",
+      "src_text": "metabolomic profile distinguishes colorectal cancer tumor vs non-neoplastic epithelium",
+      "tgt_text": "Serum metabolite panel predicts Colorectal Cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "1e649391cdadbf03",
+      "tgt_id": "46d168e1be856754",
+      "src_text": "Alanine, aspartate, and glutamate metabolism pathway distinguishes average-onset colorectal cancer vs early-onset colorectal cancer",
+      "tgt_text": "lactate/citrate ratio is_biomarker_for Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "0af46564e3f95722",
+      "tgt_id": "7b5316b80ca551f8",
+      "src_text": "dietary polyphenols increases reduced glutathione/oxidized glutathione (GSH/GSSG) ratio",
+      "tgt_text": "SPE purification distinguishes methanol deproteinization metabolite profile",
+      "original": "supports",
+      "claude": "contradicts",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8cc0cf781e82a9cc",
+      "tgt_id": "17b9ac80149fd2f3",
+      "src_text": "3PO decreases Reactive Oxygen Species production",
+      "tgt_text": "Baricitinib decreases Neutrophil extracellular trap production",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "873f2246ddba4b8e",
+      "tgt_id": "02b8caf7685eef7b",
+      "src_text": "Valine distinguishes Colorectal Cancer vs Advanced Adenoma",
+      "tgt_text": "5-alpha-androstan-3beta,17beta-diol disulfate correlates_with colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "e7f6dfeac69cdbef",
+      "tgt_id": "08edae7a79a0409e",
+      "src_text": "nonsense mutations decreases hydroxycinnamic acid amine",
+      "tgt_text": "CAMERA distinguishes annotatable compounds in negative ion mode",
+      "original": "supports",
+      "claude": "contradicts",
+      "gemini": "supports",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "dd2bcb86c633398a",
+      "tgt_id": "ac0e29ef3f10864d",
+      "src_text": "lysophosphatidylcholines decreases total fatigue",
+      "tgt_text": "acylcarnitines increases total fatigue",
+      "original": "contradicts",
+      "claude": "contradicts",
+      "gemini": "contradicts",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "7f9ac3cacb789536",
+      "tgt_id": "7e15dcb8602037ca",
+      "src_text": "hypoxanthine is_biomarker_for colorectal cancer precursor lesions (polyposis)",
+      "tgt_text": "13-metabolite panel is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "9d5f7778594533af",
+      "tgt_id": "8f0823fe7fa08f75",
+      "src_text": "CYP450 gene family activates coumarin biosynthesis",
+      "tgt_text": "transposable elements increases Peucedanum praeruptorum genome size",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "f40d998842d494b8",
+      "tgt_id": "8bf01b3f893b4baa",
+      "src_text": "\u03b2-hydroxybutyrate activates ACAT1",
+      "tgt_text": "Glutamine-Leucine is_biomarker_for Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "4a97bb8b4b5270ef",
+      "tgt_id": "ae91c02d8932adb3",
+      "src_text": "xanthosine is_biomarker_for colon cancer",
+      "tgt_text": "fecal acetate correlates_with myo-inositol",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8bd1b8a096df67ba",
+      "tgt_id": "fe18d4c5745f58f2",
+      "src_text": "azelaic acid is_biomarker_for colorectal cancer",
+      "tgt_text": "Fumarate is_biomarker_for Colorectal Cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "dc95d11d8e31e708",
+      "tgt_id": "2188c28c7f73ddda",
+      "src_text": "metabolomics is_biomarker_for colorectal cancer",
+      "tgt_text": "cysteine is_biomarker_for colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "a4ce50d693071ab5",
+      "tgt_id": "ed706dfed42851af",
+      "src_text": "ophthalmic acid decreases Frailty",
+      "tgt_text": "carnitine shuttle metabolites is_biomarker_for frailty",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "38233eb0d4948339",
+      "tgt_id": "112e93079e7c8564",
+      "src_text": "acetyl-carnosine is_biomarker_for Frailty",
+      "tgt_text": "tocotrienols is_biomarker_for frailty",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "4eaf76a404e49857",
+      "tgt_id": "8c56aab769227f47",
+      "src_text": "histidine is_biomarker_for colorectal cancer",
+      "tgt_text": "Fecal metabonomic profile (GC/TOFMS) predicts Colorectal Cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "5ccf3ca6907853fc",
+      "tgt_id": "a286575c4b08c9fc",
+      "src_text": "Phosphatidylglycerol is_biomarker_for Colorectal Cancer",
+      "tgt_text": "Diacylglycerophosphates (PA) is_biomarker_for Colorectal cancer (early stage)",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "bdd58ac74f073abe",
+      "tgt_id": "0d39b53944b1b851",
+      "src_text": "prostaglandin E2 increases airway epithelial permeability",
+      "tgt_text": "tryptophan decreases bronchial epithelial barrier function",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "5b3a7f36cd7281d1",
+      "tgt_id": "a55e0799b7bc1ba6",
+      "src_text": "phosphatidylcholine (PC 16:0/18:1) increases pMMR colorectal cancer cells",
+      "tgt_text": "Combined NMR and LC/MS metabolomics panel distinguishes Polyps vs Healthy Controls",
+      "original": "applies",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "7a39920d382b8ae7",
+      "tgt_id": "e79bb489352d2fdb",
+      "src_text": "Diallyl Disulfide increases arachidonic acid",
+      "tgt_text": "Candida albicans (bloodborne infection) increases Escherichia-Shigella",
+      "original": "contradicts",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "8cc0cf781e82a9cc",
+      "tgt_id": "e2e25f14897537a5",
+      "src_text": "3PO decreases Reactive Oxygen Species production",
+      "tgt_text": "Taurine is_biomarker_for Osteoarthritis",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "adfed5c541f5d3e1",
+      "tgt_id": "4c424dbf868732c6",
+      "src_text": "lactate is_biomarker_for colorectal cancer",
+      "tgt_text": "kynurenate distinguishes colorectal cancer",
+      "original": "extends",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "d1e0c98faf30c65c",
+      "tgt_id": "0ed2d51f1e66e0d6",
+      "src_text": "\u03b2-hydroxybutyrate causes Colorectal Cancer metastasis",
+      "tgt_text": "Glutamine-Leucine distinguishes Early-Stage Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "90eb8cbd0642a10b",
+      "tgt_id": "cbe0c7a31fb98572",
+      "src_text": "AHCY is_biomarker_for colorectal cancer",
+      "tgt_text": "High-throughput REIMS distinguishes Candida species",
+      "original": "supports",
+      "claude": "contradicts",
+      "gemini": "applies",
+      "gpt52": "contradicts"
+    },
+    {
+      "src_id": "670a311d8af7f53a",
+      "tgt_id": "1c65696b6f92fe7d",
+      "src_text": "GW625019 increases 15-deoxy-prostaglandin J2 (15-deoxy PGJ2)",
+      "tgt_text": "acylcarnitines correlates_with mitochondrial dysfunction",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "a00a3ca71a3e4737",
+      "tgt_id": "9e18a2951f9bed6d",
+      "src_text": "Psychrobacter increases coral bleaching (thermal stress)",
+      "tgt_text": "Serum metabolomic profile distinguishes Toxoplasma gondii acute infection",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "22d337c2d3a7855a",
+      "tgt_id": "0056b2bee5262fc0",
+      "src_text": "tumor-associated macrophage metabolic signatures correlates_with macrophage polarization diversity (scRNA-seq atlas)",
+      "tgt_text": "FACS (fluorescence-activated cell sorting) decreases phosphatidylcholine",
+      "original": "contradicts",
+      "claude": "contradicts",
+      "gemini": "applies",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "6755aed6969a335f",
+      "tgt_id": "cbeb78b603c334c6",
+      "src_text": "Phosphatidylcholine PC 34:0 correlates_with Bisphenol A",
+      "tgt_text": "Metabolomics panel predicts Colorectal Cancer recurrence",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "applies",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "664d4d9ee509a177",
+      "tgt_id": "51c840a3d311a75a",
+      "src_text": "Floris Sophorae Powder decreases Cell migration",
+      "tgt_text": "kaempferol inhibits colorectal cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "extends"
+    },
+    {
+      "src_id": "f96b8d32ce0c2e8e",
+      "tgt_id": "77c8317d3313ea24",
+      "src_text": "Indoleamine 2,3-dioxygenase (IDO) is_metabolite_of Tryptophan catabolism to Kynurenine",
+      "tgt_text": "Flexibilide decreases Sphingolipids",
+      "original": "supports",
+      "claude": "contradicts",
+      "gemini": "extends",
+      "gpt52": "applies"
+    },
+    {
+      "src_id": "af880b026ff8355e",
+      "tgt_id": "7b093b58342a15d5",
+      "src_text": "Caulerpa lentillifera polysaccharide inhibits LoVo colon cancer cells (monolayer)",
+      "tgt_text": "Sulforaphane inhibits Colorectal Cancer",
+      "original": "supports",
+      "claude": "extends",
+      "gemini": "extends",
+      "gpt52": "applies"
+    }
+  ]
+}
