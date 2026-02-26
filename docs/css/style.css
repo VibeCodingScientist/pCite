@@ -58,10 +58,10 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
 .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .score-tip{position:relative;display:inline-block;cursor:help;margin-left:.3rem}
 .score-tip .tip-icon{font-size:.8rem;color:#999}
-.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;right:0;left:auto;
-  transform:none;width:420px;background:#333;color:#fff;font-size:.78rem;
-  line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;text-align:left;
-  font-weight:normal}
+.score-tip .tip-text{visibility:hidden;position:absolute;top:calc(100% + 8px);right:0;left:auto;
+  transform:none;width:420px;max-width:calc(100vw - 3rem);background:#333;color:#fff;
+  font-size:.78rem;line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;
+  text-align:left;font-weight:normal}
 .score-tip:hover .tip-text{visibility:visible}
 .score-breakdown{font-size:.88rem;color:#444;line-height:1.6;margin:.25rem 0}
 .cite-claim-weight{width:60px;text-align:right;flex-shrink:0;color:#888;font-size:.78rem;
