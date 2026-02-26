@@ -325,8 +325,8 @@ def run_claim_spotcheck() -> dict:
         # Stratified sample — support both old and new enum names
         classes = [
             "PhysicalMeasurement",
-            "DatabaseReferenced", "HumanCurated",       # old/new name
-            "TextDerived", "AIGenerated",                # old/new name
+            "DatabaseReferenced", "HumanCurated",       # current/legacy name
+            "TextDerived", "AIGenerated",                # current/legacy name
             "Replicated",
         ]
         by_class: dict[str, list[dict]] = {cls: [] for cls in classes}

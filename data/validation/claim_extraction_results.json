@@ -9,7 +9,7 @@
       "traceable": 9,
       "precision": 0.9
     },
-    "HumanCurated": {
+    "DatabaseReferenced": {
       "n": 13,
       "traceable": 10,
       "precision": 0.7692
@@ -162,7 +162,7 @@
       "claim_id": "f83d66d6e0e6bc59",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "bile acid biosynthesis metabolites",
       "predicate": "is_biomarker_for",
       "object": "Colorectal Cancer",
@@ -173,7 +173,7 @@
       "claim_id": "bf56c4b7d88b1574",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "oxidative pathway metabolites",
       "predicate": "distinguishes",
       "object": "colorectal cancer",
@@ -184,7 +184,7 @@
       "claim_id": "8687be456871fb20",
       "status": "checked",
       "traceable": false,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Lipid membrane composition",
       "predicate": "predicts",
       "object": "Cell sensitivity to calcium electroporation",
@@ -195,7 +195,7 @@
       "claim_id": "3c118ff9eb20394d",
       "status": "checked",
       "traceable": false,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Penalized Orthogonal Components Regression (POCR)",
       "predicate": "predicts",
       "object": "metabolite biomarkers",
@@ -206,7 +206,7 @@
       "claim_id": "c45ccfda032cadee",
       "status": "checked",
       "traceable": false,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Bamboo Leaf Extract from Guadua incana (BLEGI)",
       "predicate": "decreases",
       "object": "glutathione metabolism",
@@ -217,7 +217,7 @@
       "claim_id": "29981c0e1bede126",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Chemotherapy",
       "predicate": "increases",
       "object": "Gut microbiota dysbiosis",
@@ -228,7 +228,7 @@
       "claim_id": "2977e44859bde07a",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "urinary metabolite panel (citrate, hippurate, p-cresol, 2-aminobutyrate, myristate, putrescine, kynurenate)",
       "predicate": "distinguishes",
       "object": "colorectal cancer",
@@ -239,7 +239,7 @@
       "claim_id": "6970ec4b489cd587",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "3-hydroxydodecanoic acid",
       "predicate": "decreases",
       "object": "tumor growth",
@@ -250,7 +250,7 @@
       "claim_id": "bbb7ba1b7701ee77",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "1,2-dimethylhydrazine",
       "predicate": "increases",
       "object": "oxidative stress markers",
@@ -261,7 +261,7 @@
       "claim_id": "0fdbac46d7443ef1",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "ME-344 + bevacizumab",
       "predicate": "causes",
       "object": "constipation",
@@ -272,7 +272,7 @@
       "claim_id": "7750c98bd58e6311",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "fatty acid metabolism reprogramming",
       "predicate": "is_biomarker_for",
       "object": "microglial activation in degenerating white matter post-stroke",
@@ -283,7 +283,7 @@
       "claim_id": "0cc2a2f92176eb92",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Zizyphus jujuba cv. Muzao polysaccharides",
       "predicate": "increases",
       "object": "Lactobacillus",
@@ -294,7 +294,7 @@
       "claim_id": "3d56a1e9f81fd8ed",
       "status": "checked",
       "traceable": true,
-      "validation_class": "HumanCurated",
+      "validation_class": "DatabaseReferenced",
       "subject": "Bletilla striata polysaccharide",
       "predicate": "correlates_with",
       "object": "pyrimidine metabolism",
@@ -304,7 +304,7 @@
     {
       "claim_id": "2e788c36c5441d6a",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "MDSCs",
       "predicate": "causes",
       "object": "peritoneal metastasis of colon cancer"
@@ -312,7 +312,7 @@
     {
       "claim_id": "bb2a9c736b5522f5",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "gut microbiota",
       "predicate": "distinguishes",
       "object": "type 2 diabetes mellitus"
@@ -320,7 +320,7 @@
     {
       "claim_id": "99a09c893afd35ef",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "serum hydroxylated ULCFA biomarker panel",
       "predicate": "predicts",
       "object": "colorectal cancer"
@@ -328,7 +328,7 @@
     {
       "claim_id": "63e516313152abf1",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "tryptophan metabolites",
       "predicate": "distinguishes",
       "object": "Colorectal adenoma"
@@ -336,7 +336,7 @@
     {
       "claim_id": "fe9d4ecac87ab513",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "kynurenine",
       "predicate": "is_biomarker_for",
       "object": "cancer"
@@ -344,7 +344,7 @@
     {
       "claim_id": "d7d6184af50d675e",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "IMPDH2",
       "predicate": "increases",
       "object": "IMP"
@@ -352,7 +352,7 @@
     {
       "claim_id": "2bda81b6e610b933",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "Fusobacterium nucleatum",
       "predicate": "is_biomarker_for",
       "object": "Colorectal adenoma"
@@ -360,7 +360,7 @@
     {
       "claim_id": "f7ef7d3063f96303",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "Inoscavin A",
       "predicate": "causes",
       "object": "colon cancer cell apoptosis"
@@ -368,7 +368,7 @@
     {
       "claim_id": "cb47e4172cd614c9",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "Isorhamnetin",
       "predicate": "inhibits",
       "object": "Colorectal Cancer"
@@ -376,7 +376,7 @@
     {
       "claim_id": "ce094cda24df83d7",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "Asymmetric Dimethylarginine",
       "predicate": "distinguishes",
       "object": "High cardiovascular risk vs. low cardiovascular risk patients"
@@ -384,7 +384,7 @@
     {
       "claim_id": "da89ff9ad4d09b1e",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "Celecoxib",
       "predicate": "increases",
       "object": "Asymmetric Dimethylarginine"
@@ -392,7 +392,7 @@
     {
       "claim_id": "a9f8185265b9f536",
       "status": "no_abstract",
-      "validation_class": "AIGenerated",
+      "validation_class": "TextDerived",
       "subject": "MYC overexpression",
       "predicate": "increases",
       "object": "lactate"
