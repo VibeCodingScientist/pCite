@@ -1,5 +1,10 @@
 # pCite
 
+[![CI](https://github.com/VibeCodingScientist/pCite/actions/workflows/ci.yml/badge.svg)](https://github.com/VibeCodingScientist/pCite/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/VibeCodingScientist/pCite/blob/main/LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Site](https://img.shields.io/badge/demo-pcite.org-green.svg)](https://vibecodingscientist.github.io/pCite/)
+
 **Physical measurement weighting for scientific claim retrieval in the age of AI-generated science.**
 
 AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and text-derived assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and TextDerived (0.01).
