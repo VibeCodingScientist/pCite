@@ -2,7 +2,7 @@
 
 **Physical measurement weighting for scientific claim retrieval in the age of AI-generated science.**
 
-AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and language-model-synthesised assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and TextDerived (0.01).
+AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and text-derived assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and TextDerived (0.01).
 
 Concept: https://vibecodingscientist.github.io/pCite — Preprint: forthcoming
 
