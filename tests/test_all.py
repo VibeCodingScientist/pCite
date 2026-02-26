@@ -137,6 +137,23 @@ def test_score_sums_incoming_weights():
     G.add_edge("c", "a", weight=3.0)
     assert compute_pcite_scores(G)["a"] == pytest.approx(5.0)
 
+def test_propagated_isolated_equals_pcite():
+    import networkx as nx
+    from pcite.graph import compute_propagated_score
+    G = nx.DiGraph()
+    G.add_node("a", pcite_score=10.0)
+    assert compute_propagated_score(G)["a"] == pytest.approx(10.0)
+
+def test_propagated_adds_neighbour_contribution():
+    import networkx as nx
+    from pcite.graph import compute_propagated_score
+    G = nx.DiGraph()
+    G.add_node("a", pcite_score=10.0)
+    G.add_node("b", pcite_score=20.0)
+    G.add_edge("b", "a", weight=5.0)
+    # a has neighbour b with score 20, so propagated = 10 + 0.1*20 = 12.0
+    assert compute_propagated_score(G, alpha=0.1)["a"] == pytest.approx(12.0)
+
 
 # Evaluate: metrics
 
@@ -149,7 +166,7 @@ def test_ndcg_perfect_ranking():
 def test_precision_in_range():
     from pcite.evaluate import precision_at_k
     records = [{"claim_id": str(i),
-                "validation_class": "PhysicalMeasurement" if i < 10 else "AIGenerated",
+                "validation_class": "PhysicalMeasurement" if i < 10 else "TextDerived",
                 "pcite_score": float(i)} for i in range(100)]
     r = precision_at_k(records, k=10)
     assert 0.0 <= r["precision_pcite"] <= 1.0

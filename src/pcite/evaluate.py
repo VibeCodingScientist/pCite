@@ -27,11 +27,11 @@ plt.rcParams.update({
 })
 
 COLORS = {
-    "PhysicalMeasurement": "#d62728",
-    "Replicated":          "#ff7f0e",
-    "HumanCurated":        "#2ca02c",
-    "AIGenerated":         "#aec7e8",
-    "Hypothesis":          "#c7c7c7",
+    "PhysicalMeasurement":  "#d62728",
+    "Replicated":           "#ff7f0e",
+    "DatabaseReferenced":   "#2ca02c",
+    "TextDerived":          "#aec7e8",
+    "Hypothesis":           "#c7c7c7",
 }
 
 
@@ -69,11 +69,12 @@ def mann_whitney(records: list[dict]) -> dict:
             "score_key": score_key}
 
 
-def precision_at_k(records: list[dict], k: int = 50) -> dict:
+def precision_at_k(records: list[dict], k: int = 50, score_key: str | None = None) -> dict:
     """What fraction of the top-k are validated (Physical/Clinical/Replicated)?"""
     validated = {r["claim_id"] for r in records if _is_validated(r)}
-    score_key = "pcite_score" if any(r["pcite_score"] > 0 for r in records) else "base_weight"
-    nc = sorted(records, key=lambda r: r[score_key], reverse=True)
+    if score_key is None:
+        score_key = "pcite_score" if any(r["pcite_score"] > 0 for r in records) else "base_weight"
+    nc = sorted(records, key=lambda r: r.get(score_key, 0), reverse=True)
     tr = sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
                 reverse=True)
     p_nc = sum(1 for r in nc[:k] if r["claim_id"] in validated) / k
@@ -83,7 +84,7 @@ def precision_at_k(records: list[dict], k: int = 50) -> dict:
             "score_key": score_key}
 
 
-def ndcg_at_k(records: list[dict], k: int = 50) -> dict:
+def ndcg_at_k(records: list[dict], k: int = 50, score_key: str | None = None) -> dict:
     """Normalised Discounted Cumulative Gain. Standard IR metric."""
     validated = {r["claim_id"] for r in records if _is_validated(r)}
 
@@ -97,8 +98,9 @@ def ndcg_at_k(records: list[dict], k: int = 50) -> dict:
     idcg  = dcg(ideal)
     if idcg == 0:
         return {"k": k, "ndcg_pcite": 0.0, "ndcg_traditional": 0.0}
-    score_key = "pcite_score" if any(r["pcite_score"] > 0 for r in records) else "base_weight"
-    nc = sorted(records, key=lambda r: r[score_key], reverse=True)
+    if score_key is None:
+        score_key = "pcite_score" if any(r["pcite_score"] > 0 for r in records) else "base_weight"
+    nc = sorted(records, key=lambda r: r.get(score_key, 0), reverse=True)
     tr = sorted(records, key=lambda r: r.get("traditional_citations", r.get("replication_count", 0)),
                 reverse=True)
     return {"k": k, "ndcg_pcite": dcg(nc) / idcg, "ndcg_traditional": dcg(tr) / idcg}
@@ -134,10 +136,10 @@ def fig1_rank_scatter(records: list[dict]) -> plt.Figure:
 
 def fig2_score_distribution(records: list[dict]) -> plt.Figure:
     """pCite score by validation class. Physical should be dramatically higher."""
-    classes = ["PhysicalMeasurement", "Replicated", "HumanCurated", "AIGenerated"]
+    classes = ["PhysicalMeasurement", "Replicated", "DatabaseReferenced", "TextDerived"]
     data    = [[r["pcite_score"] for r in records if r["validation_class"] == vc] for vc in classes]
     fig, ax = plt.subplots(figsize=(7, 5))
-    bp = ax.boxplot(data, labels=["Physical","Replicated","Curated","AI"],
+    bp = ax.boxplot(data, tick_labels=["Physical","Replicated","DB Ref","Text Derived"],
                     patch_artist=True, showfliers=False)
     for patch, vc in zip(bp["boxes"], classes):
         patch.set(facecolor=COLORS[vc], alpha=0.7)
@@ -158,7 +160,7 @@ def fig3_precision_curve(records: list[dict]) -> plt.Figure:
     ax.plot(ks, [sum(1 for r in nc[:k] if r["claim_id"] in validated)/k for k in ks],
             "-o", ms=4, color=COLORS["PhysicalMeasurement"], label="pCite")
     ax.plot(ks, [sum(1 for r in tr[:k] if r["claim_id"] in validated)/k for k in ks],
-            "-s", ms=4, color=COLORS["AIGenerated"], label="Traditional")
+            "-s", ms=4, color=COLORS["TextDerived"], label="Traditional")
     ax.axhline(len(validated)/len(records), ls="--", color="gray", lw=0.8, label="Random")
     ax.set(xlabel="k", ylabel="Precision@k", title="Precision of surfacing validated claims")
     ax.legend()
@@ -174,6 +176,9 @@ def run_experiment() -> dict:
         "precision_50": precision_at_k(records, k=50),
         "ndcg_50":      ndcg_at_k(records, k=50),
     }
+    if any(r.get("pcite_propagated", 0) != 0 for r in records):
+        results["propagated_precision_50"] = precision_at_k(records, k=50, score_key="pcite_propagated")
+        results["propagated_ndcg_50"] = ndcg_at_k(records, k=50, score_key="pcite_propagated")
     RESULTS_OUT.parent.mkdir(exist_ok=True)
     RESULTS_OUT.write_text(json.dumps(results, indent=2))
     FIGURES_DIR.mkdir(exist_ok=True)

@@ -36,8 +36,8 @@
     <option value="PhysicalMeasurement">Physical</option>
     <option value="ClinicalObservation">Clinical</option>
     <option value="Replicated">Replicated</option>
-    <option value="HumanCurated">Curated</option>
-    <option value="AIGenerated">AI Generated</option>
+    <option value="DatabaseReferenced">DB Referenced</option>
+    <option value="TextDerived">Text Derived</option>
     <option value="Hypothesis">Hypothesis</option>
 </select>
   <select id="f-rep">
@@ -51,8 +51,8 @@
 <div class="legend">
   <span class="legend-item"><span class="legend-dot" style="background:#2ca02c"></span> Physical (10.0)</span>
   <span class="legend-item"><span class="legend-dot" style="background:#ff7f0e"></span> Replicated (2.0)</span>
-  <span class="legend-item"><span class="legend-dot" style="background:#f0a030"></span> Curated (0.5)</span>
-  <span class="legend-item"><span class="legend-dot" style="background:#d62728"></span> AI-generated (0.01)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#f0a030"></span> DB Referenced (0.5)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#d62728"></span> Text Derived (0.01)</span>
 </div>
 
 <div class="summary" id="summary">8,761 claims &middot; from 1,287 papers</div>
@@ -62,7 +62,7 @@
 
 <script>
 (function() {
-  const COLORS = {"PhysicalMeasurement": "#2ca02c", "ClinicalObservation": "#7bc96f", "Replicated": "#ff7f0e", "HumanCurated": "#f0a030", "AIGenerated": "#d62728", "Hypothesis": "#c7c7c7"};
+  const COLORS = {"PhysicalMeasurement": "#2ca02c", "ClinicalObservation": "#7bc96f", "Replicated": "#ff7f0e", "DatabaseReferenced": "#f0a030", "TextDerived": "#d62728", "Hypothesis": "#c7c7c7"};
   let allClaims = [], filtered = [], shown = 0;
   const BATCH = 50;
 
@@ -134,7 +134,7 @@
 
   function shortName(v) {
     const m = {"PhysicalMeasurement":"Physical","ClinicalObservation":"Clinical",
-      "Replicated":"Replicated","HumanCurated":"Curated","AIGenerated":"AI Generated",
+      "Replicated":"Replicated","DatabaseReferenced":"DB Referenced","TextDerived":"Text Derived",
       "Hypothesis":"Hypothesis"};
     return m[v] || v;
   }

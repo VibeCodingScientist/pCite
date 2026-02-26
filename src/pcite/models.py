@@ -25,8 +25,8 @@ class ValidationClass(str, Enum):
     PHYSICAL     = "PhysicalMeasurement"   # raw instrument data in public repo
     CLINICAL     = "ClinicalObservation"   # EHR / IRB-verified patient data
     REPLICATED   = "Replicated"            # ≥3 independent CURATED sources
-    CURATED      = "HumanCurated"          # structured deposit, expert record
-    AI_GENERATED = "AIGenerated"           # synthesised from literature text
+    CURATED      = "DatabaseReferenced"     # structured deposit, expert record
+    AI_GENERATED = "TextDerived"           # synthesised from literature text
     HYPOTHESIS   = "Hypothesis"            # proposed, untested
 
 VALIDATION_WEIGHT: dict[ValidationClass, float] = {
@@ -70,7 +70,7 @@ PCITE_WEIGHT: dict[PCiteType, float] = {
     PCiteType.SUPPORTS:    1.0,
     PCiteType.EXTENDS:     1.2,
     PCiteType.REPLICATES:  1.5,  # replication earns more than novelty
-    PCiteType.CONTRADICTS: 0.8,  # counter-evidence still earns credit
+    PCiteType.CONTRADICTS: -0.5, # counter-evidence penalises the target
     PCiteType.APPLIES:     0.6,
 }
 
