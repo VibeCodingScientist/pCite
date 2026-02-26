@@ -3,7 +3,7 @@
 [![CI](https://github.com/VibeCodingScientist/pCite/actions/workflows/ci.yml/badge.svg)](https://github.com/VibeCodingScientist/pCite/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/VibeCodingScientist/pCite/blob/main/LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Site](https://img.shields.io/badge/demo-pcite.org-green.svg)](https://vibecodingscientist.github.io/pCite/)
+[![Site](https://img.shields.io/badge/demo-GitHub%20Pages-green.svg)](https://vibecodingscientist.github.io/pCite/)
 
 **Physical measurement weighting for scientific claim retrieval in the age of AI-generated science.**
 
