@@ -9,8 +9,6 @@
 
 AI systems generate scientific claims at near-zero cost. Existing citation metrics assign equal weight to instrument-measured results and text-derived assertions. pCite addresses this by weighting every citation by the validation class of its source claim, with a 1,000-fold gap between PhysicalMeasurement (10.0) and TextDerived (0.01).
 
-Concept: https://vibecodingscientist.github.io/pCite — Preprint: forthcoming
-
 ---
 
 ## Results
@@ -126,7 +124,7 @@ figures/
   fig1_rank_comparison.pdf
   fig2_score_dist.pdf
   fig3_precision_at_k.pdf
-tests/             — 23 tests, no API keys needed
+tests/             — 25 tests, no API keys needed
 docs/              — static site (GitHub Pages)
 ```
 
@@ -144,8 +142,3 @@ docs/              — static site (GitHub Pages)
 pytest tests/ -v
 ```
 
----
-
-## License
-
-MIT
