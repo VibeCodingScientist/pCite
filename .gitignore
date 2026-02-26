@@ -10,3 +10,16 @@ build/
 .ipynb_checkpoints/
 .venv/
 data/nanopubs/
+
+# Dev handover / planning docs
+*_handoff*.md
+*_handover*.md
+PCITE_BUILD.md
+frontend.md
+
+# One-off utility scripts
+build_citation_cache.py
+run_steps345.py
+
+# iCloud duplicates (files with " 2" suffix)
+* 2.*
