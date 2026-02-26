@@ -109,10 +109,10 @@ input[type=text]{width:100%;padding:.5rem .75rem;font-size:1rem;font-family:inhe
 .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .score-tip{position:relative;display:inline-block;cursor:help;margin-left:.3rem}
 .score-tip .tip-icon{font-size:.8rem;color:#999}
-.score-tip .tip-text{visibility:hidden;position:absolute;bottom:125%;right:0;left:auto;
-  transform:none;width:420px;background:#333;color:#fff;font-size:.78rem;
-  line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;text-align:left;
-  font-weight:normal}
+.score-tip .tip-text{visibility:hidden;position:absolute;top:calc(100% + 8px);right:0;left:auto;
+  transform:none;width:420px;max-width:calc(100vw - 3rem);background:#333;color:#fff;
+  font-size:.78rem;line-height:1.4;padding:.6rem .75rem;border-radius:4px;z-index:10;
+  text-align:left;font-weight:normal}
 .score-tip:hover .tip-text{visibility:visible}
 .score-breakdown{font-size:.88rem;color:#444;line-height:1.6;margin:.25rem 0}
 .cite-claim-weight{width:60px;text-align:right;flex-shrink:0;color:#888;font-size:.78rem;
@@ -211,22 +211,33 @@ def build_search_index(claims, scores_by_id):
     return index
 
 
-def _render_score_breakdown(weight, short, rep, score, n_citations):
+def _render_score_breakdown(weight, short, rep, score, by_type, edges_by_type):
     base_weight = weight * math.log2(rep + 1)
-    lines = (
+    n_citations = sum(by_type.values()) if by_type else 0
+    out = (
         f'<p class="section-label">SCORE BREAKDOWN</p>\n'
         f'<hr class="section-rule">\n'
         f'<div class="score-breakdown">'
-        f'Base weight: {weight} ({_esc(short)}) &times; log&#8322;({rep}+1) = {base_weight:.2f}'
+        f'Base weight: {base_weight:.2f} ({_esc(short)}, {rep} paper{"s" if rep != 1 else ""})'
     )
     if n_citations > 0:
-        lines += (
-            f'<br>Incoming citations: {n_citations} &rarr; score {score:.2f}'
+        # Build "22× extends (+51.87) · 18× supports (+9.58) · ..." for non-zero types
+        parts = []
+        for ct in ["replicates", "extends", "supports", "contradicts", "applies"]:
+            count = by_type.get(ct, 0)
+            if count == 0:
+                continue
+            subtotal = sum(e["weight"] for e in edges_by_type.get(ct, []))
+            parts.append(f'{count}&times; {ct} (+{subtotal:.2f})')
+        cite_detail = ' &middot; '.join(parts)
+        out += (
+            f'<br>Score from {n_citations} citations: <strong>{score:.2f}</strong>'
+            f'<br><span style="color:#888">{cite_detail}</span>'
         )
     else:
-        lines += ' &middot; No incoming citations yet'
-    lines += '</div>\n'
-    return lines
+        out += '<br>No incoming citations yet'
+    out += '</div>\n'
+    return out
 
 
 def render_claim(claim, score_data, graph_edges, claims_by_id):
@@ -267,15 +278,16 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
             f'</div>\n'
         )
 
-    # Citations from graph
+    # Citations from graph — count early for score breakdown
+    from collections import Counter, defaultdict
     edges = graph_edges.get(c["id"], [])
+    by_type = Counter(e["type"] for e in edges)
+    edges_by_type = defaultdict(list)
+    for e in edges:
+        edges_by_type[e["type"]].append(e)
+
     citations_html = ""
     if edges:
-        from collections import Counter, defaultdict
-        by_type = Counter(e["type"] for e in edges)
-        edges_by_type = defaultdict(list)
-        for e in edges:
-            edges_by_type[e["type"]].append(e)
         total = len(edges)
         max_ct = max(by_type.values()) if by_type else 1
         citations_html += f'<p class="section-label">CITATIONS RECEIVED &middot; {total} total</p>\n<hr class="section-rule">\n'
@@ -334,7 +346,7 @@ def render_claim(claim, score_data, graph_edges, claims_by_id):
   <span>Score: {score:.2f}<span class="score-tip"><span class="tip-icon">&nbsp;&#9432;</span><span class="tip-text">Score = &Sigma; incoming citation weights. Each citation is weighted by the validation class of the source claim (Physical 10.0 &middot; Curated 0.5 &middot; AI 0.01) multiplied by the citation type (Replicates 1.5 &middot; Supports 1.0 &middot; Contradicts 0.8). A score of 364 means this claim received strong physical-tier citation support.</span></span></span>
 </div>
 
-{_render_score_breakdown(weight, short, rep, score, len(edges))}
+{_render_score_breakdown(weight, short, rep, score, by_type, edges_by_type)}
 
 <p class="section-label">EVIDENCE CHAIN &middot; {len(provenance)} source{"s" if len(provenance) != 1 else ""}</p>
 <hr class="section-rule">
