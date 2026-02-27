@@ -1,0 +1,114 @@
+[
+  {
+    "ratio": 1,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 10.0,
+      "Replicated": 10.0,
+      "DatabaseReferenced": 10.0,
+      "TextDerived": 10.0,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 0.5,
+    "precision_traditional": 0.5,
+    "lift": 1.0
+  },
+  {
+    "ratio": 2,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 9.1193,
+      "Replicated": 8.5086,
+      "DatabaseReferenced": 7.4072,
+      "TextDerived": 5.0,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 0.6,
+    "precision_traditional": 0.5,
+    "lift": 1.2
+  },
+  {
+    "ratio": 5,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 8.073,
+      "Replicated": 6.8729,
+      "DatabaseReferenced": 4.9813,
+      "TextDerived": 2.0,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 0.94,
+    "precision_traditional": 0.5,
+    "lift": 1.88
+  },
+  {
+    "ratio": 10,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 7.3621,
+      "Replicated": 5.8479,
+      "DatabaseReferenced": 3.6898,
+      "TextDerived": 1.0,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 1.0,
+    "precision_traditional": 0.5,
+    "lift": 2.0
+  },
+  {
+    "ratio": 50,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 5.9434,
+      "Replicated": 4.0192,
+      "DatabaseReferenced": 1.838,
+      "TextDerived": 0.2,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 1.0,
+    "precision_traditional": 0.5,
+    "lift": 2.0
+  },
+  {
+    "ratio": 100,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 5.42,
+      "Replicated": 3.4198,
+      "DatabaseReferenced": 1.3614,
+      "TextDerived": 0.1,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 1.0,
+    "precision_traditional": 0.5,
+    "lift": 2.0
+  },
+  {
+    "ratio": 500,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 4.3756,
+      "Replicated": 2.3504,
+      "DatabaseReferenced": 0.6782,
+      "TextDerived": 0.02,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 1.0,
+    "precision_traditional": 0.5,
+    "lift": 2.0
+  },
+  {
+    "ratio": 1000,
+    "weights": {
+      "PhysicalMeasurement": 10.0,
+      "ClinicalObservation": 3.9902,
+      "Replicated": 1.9999,
+      "DatabaseReferenced": 0.5023,
+      "TextDerived": 0.01,
+      "Hypothesis": 0.0
+    },
+    "precision_pcite": 1.0,
+    "precision_traditional": 0.5,
+    "lift": 2.0
+  }
+]
