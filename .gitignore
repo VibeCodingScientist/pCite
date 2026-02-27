@@ -10,6 +10,7 @@ build/
 .ipynb_checkpoints/
 .venv/
 data/nanopubs/
+data/pride/
 
 # Dev handover / planning docs
 *_handoff*.md

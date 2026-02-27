@@ -46,6 +46,23 @@ DOI: {doi}
 
 {text}"""
 
+_PROMPT_PROTEOMICS = """\
+Extract atomic scientific claims from this proteomics paper.
+
+A claim is one falsifiable assertion: subject -> predicate -> object, with quantitative evidence.
+Only extract claims backed by numbers (p-values, fold changes, effect sizes, AUC).
+
+predicate MUST be exactly one of:
+  increases | decreases | is_biomarker_for | distinguishes | predicts |
+  inhibits | activates | correlates_with | causes | treats
+
+Entity IDs: UniProt (proteins), GO (gene ontology), MESH (diseases).
+Format: "UNIPROT:P04637" or "GO:0006915" or "MESH:D009369". Use "UNKNOWN:name" if unmappable.
+
+DOI: {doi}
+
+{text}"""
+
 _SCHEMA = {
     "name": "submit_claims",
     "description": "Submit extracted scientific claims",
@@ -88,8 +105,9 @@ def _hmdb_lookup(name: str) -> str:
     return f"UNKNOWN:{name.lower().strip()}"
 
 
-async def _extract(paper: Paper) -> list[Claim]:
+async def _extract(paper: Paper, domain: str = "metabolomics") -> list[Claim]:
     """One Claude call per paper. tool_use guarantees valid JSON — no output parsing."""
+    prompt = _PROMPT_PROTEOMICS if domain == "proteomics" else _PROMPT
     text = paper.title + "\n\n" + paper.abstract
     if paper.full_text:
         text += "\n\n" + paper.full_text[:3000]
@@ -101,7 +119,7 @@ async def _extract(paper: Paper) -> list[Claim]:
                 tools=[_SCHEMA],
                 tool_choice={"type": "tool", "name": "submit_claims"},
                 messages=[{"role": "user",
-                            "content": _PROMPT.format(doi=paper.doi, text=text)}],
+                            "content": prompt.format(doi=paper.doi, text=text)}],
             )
             # Find the tool_use block (may not be content[0])
             tool_block = next(
@@ -122,8 +140,9 @@ async def _extract(paper: Paper) -> list[Claim]:
     claims = []
     for c in raw:
         try:
-            subj_id = c["subject_id"] if not c["subject_id"].startswith("UNKNOWN") \
-                      else _hmdb_lookup(c["subject_name"])
+            subj_id = c["subject_id"]
+            if subj_id.startswith("UNKNOWN") and domain == "metabolomics":
+                subj_id = _hmdb_lookup(c["subject_name"])
             claims.append(Claim(
                 subject    = Entity(id=subj_id, name=c["subject_name"], type=c["subject_type"]),
                 predicate  = Predicate(c["predicate"]),
@@ -135,6 +154,7 @@ async def _extract(paper: Paper) -> list[Claim]:
                 ),
                 provenance = [ProvenanceEntry(
                     doi=paper.doi, metabo_id=paper.metabo_id,
+                    deposit_id=paper.deposit_id,
                     validation_class=ValidationClass.AI_GENERATED,
                 )],
             ))
@@ -155,17 +175,24 @@ def _merge_all(claims: list[Claim]) -> list[Claim]:
     return list(merged.values())
 
 
-async def process_corpus() -> int:
-    from pcite.corpus import load_papers
-    papers, all_claims = load_papers(), []
+async def process_corpus(
+    papers_loader=None,
+    output_path: Path | None = None,
+    domain: str = "metabolomics",
+) -> int:
+    output_path = output_path or DATA_OUT
+    if papers_loader is None:
+        from pcite.corpus import load_papers
+        papers_loader = load_papers
+    papers, all_claims = papers_loader(), []
     for i in range(0, len(papers), 20):
-        results = await asyncio.gather(*[_extract(p) for p in papers[i:i+20]])
+        results = await asyncio.gather(*[_extract(p, domain=domain) for p in papers[i:i+20]])
         for claims in results:
             all_claims.extend(claims)
         print(f"  {len(all_claims)} claims extracted...", file=sys.stderr)
     merged = _merge_all(all_claims)
-    DATA_OUT.parent.mkdir(exist_ok=True)
-    with DATA_OUT.open("w") as f:
+    output_path.parent.mkdir(exist_ok=True)
+    with output_path.open("w") as f:
         for c in merged:
             f.write(c.model_dump_json() + "\n")
     replicated = sum(1 for c in merged if c.replication_count > 1)
@@ -173,8 +200,9 @@ async def process_corpus() -> int:
     return len(merged)
 
 
-def load_claims() -> list[Claim]:
-    return [Claim.model_validate_json(l) for l in DATA_OUT.read_text().splitlines() if l]
+def load_claims(path: Path | None = None) -> list[Claim]:
+    path = path or DATA_OUT
+    return [Claim.model_validate_json(l) for l in path.read_text().splitlines() if l]
 
 
 if __name__ == "__main__":

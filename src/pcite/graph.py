@@ -99,14 +99,16 @@ async def _citing_dois(openalex_id: str, client: httpx.AsyncClient) -> list[str]
             return []
 
 
-def _load_classify_cache() -> dict[str, str]:
-    if CLASSIFY_CACHE.exists():
-        return json.loads(CLASSIFY_CACHE.read_text())
+def _load_classify_cache(path: Path | None = None) -> dict[str, str]:
+    path = path or CLASSIFY_CACHE
+    if path.exists():
+        return json.loads(path.read_text())
     return {}
 
 
-def _save_classify_cache(cache: dict[str, str]) -> None:
-    CLASSIFY_CACHE.write_text(json.dumps(cache))
+def _save_classify_cache(cache: dict[str, str], path: Path | None = None) -> None:
+    path = path or CLASSIFY_CACHE
+    path.write_text(json.dumps(cache))
 
 
 _disk_cache: dict[str, str] = {}
@@ -186,9 +188,21 @@ def compute_propagated_score(G: nx.DiGraph, alpha: float = 0.1) -> dict[str, flo
     return propagated
 
 
-async def build_full_graph() -> nx.DiGraph:
-    from pcite.extract import load_claims
-    claims = load_claims()
+async def build_full_graph(
+    claims_loader=None,
+    graph_out: Path | None = None,
+    scores_out: Path | None = None,
+    classify_cache: Path | None = None,
+    citation_cache: Path | None = None,
+) -> nx.DiGraph:
+    graph_out = graph_out or GRAPH_OUT
+    scores_out = scores_out or SCORES_OUT
+    classify_cache_path = classify_cache or CLASSIFY_CACHE
+    citation_cache_path = citation_cache or CITATION_CACHE
+    if claims_loader is None:
+        from pcite.extract import load_claims
+        claims_loader = load_claims
+    claims = claims_loader()
     by_doi: dict[str, list[Claim]] = {}
     for c in claims:
         for p in c.provenance:
@@ -198,8 +212,8 @@ async def build_full_graph() -> nx.DiGraph:
     print(f"  {G.number_of_nodes()} nodes", file=sys.stderr)
 
     # Load cached citations if available, otherwise query OpenAlex
-    if CITATION_CACHE.exists():
-        citing_map = json.loads(CITATION_CACHE.read_text())
+    if citation_cache_path.exists():
+        citing_map = json.loads(citation_cache_path.read_text())
         print(f"  loaded {len(citing_map)} DOIs from citation cache",
               file=sys.stderr)
     else:
@@ -224,7 +238,8 @@ async def build_full_graph() -> nx.DiGraph:
                       f"/{len(resolved)} DOIs queried", file=sys.stderr)
 
         # Save citation cache
-        CITATION_CACHE.write_text(json.dumps(citing_map))
+        citation_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        citation_cache_path.write_text(json.dumps(citing_map))
         print(f"  saved citation cache ({len(citing_map)} DOIs)",
               file=sys.stderr)
 
@@ -241,7 +256,7 @@ async def build_full_graph() -> nx.DiGraph:
     print(f"  {total} candidate edges to classify", file=sys.stderr)
 
     global _disk_cache
-    _disk_cache = _load_classify_cache()
+    _disk_cache = _load_classify_cache(classify_cache_path)
     cached = sum(1 for s, t in candidates
                  if f"{s.subject.name} {s.predicate.value} {s.object.name}||"
                     f"{t.subject.name} {t.predicate.value} {t.object.name}" in _disk_cache)
@@ -260,16 +275,18 @@ async def build_full_graph() -> nx.DiGraph:
         edges += 1
         if (i + 1) % 50 == 0 or (i + 1) == total:
             print(f"  classify: {i + 1}/{total} edges", file=sys.stderr)
-            _save_classify_cache(_disk_cache)
+            _save_classify_cache(_disk_cache, classify_cache_path)
 
     print(f"  {edges} edges added", file=sys.stderr)
     scores = compute_pcite_scores(G)
     nx.set_node_attributes(G, scores, "pcite_score")
     propagated = compute_propagated_score(G)
     nx.set_node_attributes(G, propagated, "pcite_propagated")
-    nx.write_graphml(G, GRAPH_OUT)
+    graph_out.parent.mkdir(parents=True, exist_ok=True)
+    nx.write_graphml(G, graph_out)
 
-    with SCORES_OUT.open("w") as f:
+    scores_out.parent.mkdir(parents=True, exist_ok=True)
+    with scores_out.open("w") as f:
         for c in claims:
             f.write(json.dumps({
                 "claim_id":          c.id,

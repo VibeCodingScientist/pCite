@@ -35,8 +35,9 @@ COLORS = {
 }
 
 
-def load_scores() -> list[dict]:
-    return [json.loads(l) for l in SCORES_IN.read_text().splitlines() if l]
+def load_scores(path: Path | None = None) -> list[dict]:
+    path = path or SCORES_IN
+    return [json.loads(l) for l in path.read_text().splitlines() if l]
 
 
 _VALIDATED = {"PhysicalMeasurement", "ClinicalObservation", "Replicated"}
@@ -168,8 +169,15 @@ def fig3_precision_curve(records: list[dict]) -> plt.Figure:
     return fig
 
 
-def run_experiment() -> dict:
-    records = load_scores()
+def run_experiment(
+    scores_path: Path | None = None,
+    results_path: Path | None = None,
+    figures_dir: Path | None = None,
+) -> dict:
+    scores_path = scores_path or SCORES_IN
+    results_path = results_path or RESULTS_OUT
+    figures_dir = figures_dir or FIGURES_DIR
+    records = load_scores(scores_path)
     results = {
         "n_total":      len(records),
         "mann_whitney": mann_whitney(records),
@@ -179,12 +187,12 @@ def run_experiment() -> dict:
     if any(r.get("pcite_propagated", 0) != 0 for r in records):
         results["propagated_precision_50"] = precision_at_k(records, k=50, score_key="pcite_propagated")
         results["propagated_ndcg_50"] = ndcg_at_k(records, k=50, score_key="pcite_propagated")
-    RESULTS_OUT.parent.mkdir(exist_ok=True)
-    RESULTS_OUT.write_text(json.dumps(results, indent=2))
-    FIGURES_DIR.mkdir(exist_ok=True)
-    fig1_rank_scatter(records).savefig(FIGURES_DIR / "fig1_rank_comparison.pdf")
-    fig2_score_distribution(records).savefig(FIGURES_DIR / "fig2_score_dist.pdf")
-    fig3_precision_curve(records).savefig(FIGURES_DIR / "fig3_precision_at_k.pdf")
+    results_path.parent.mkdir(exist_ok=True)
+    results_path.write_text(json.dumps(results, indent=2))
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    fig1_rank_scatter(records).savefig(figures_dir / "fig1_rank_comparison.pdf")
+    fig2_score_distribution(records).savefig(figures_dir / "fig2_score_dist.pdf")
+    fig3_precision_curve(records).savefig(figures_dir / "fig3_precision_at_k.pdf")
     plt.close("all")
     return results
 

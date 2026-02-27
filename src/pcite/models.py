@@ -122,6 +122,7 @@ class ProvenanceEntry(BaseModel):
     doi:              str
     validation_class: ValidationClass = ValidationClass.AI_GENERATED
     metabo_id:        Optional[str]   = None
+    deposit_id:       Optional[str]   = None
 
 
 class Claim(BaseModel):
@@ -222,5 +223,6 @@ class Paper(BaseModel):
     abstract:              str
     full_text:             Optional[str] = None
     metabo_id:             Optional[str] = None
+    deposit_id:            Optional[str] = None
     traditional_citations: int           = 0
     year:                  Optional[int] = None

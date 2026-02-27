@@ -62,6 +62,11 @@ def classify_provenance(entry: ProvenanceEntry, papers: dict[str, Paper]) -> Pro
             "validation_class": ValidationClass.PHYSICAL,
             "metabo_id": paper.metabo_id,
         })
+    if paper.deposit_id:
+        return entry.model_copy(update={
+            "validation_class": ValidationClass.PHYSICAL,
+            "deposit_id": paper.deposit_id,
+        })
     if paper.abstract:
         return entry.model_copy(update={"validation_class": ValidationClass.CURATED})
     return entry
@@ -115,6 +120,9 @@ def to_nanopub(claim: Claim) -> ConjunctiveGraph:
         if entry.metabo_id:
             prov.add((doi_uri, PROV.hadPrimarySource,
                       _safe_uri(f"https://www.ebi.ac.uk/metabolights/{entry.metabo_id}")))
+        elif entry.deposit_id:
+            prov.add((doi_uri, PROV.hadPrimarySource,
+                      _safe_uri(f"https://www.ebi.ac.uk/pride/archive/projects/{entry.deposit_id}")))
     prov.add((assn_uri, NPX.validationClass,
               Literal(claim.validation_class.value)))
     prov.add((assn_uri, NPX.replicationCount,
@@ -126,17 +134,28 @@ def to_nanopub(claim: Claim) -> ConjunctiveGraph:
     return g
 
 
-def process_claims() -> int:
-    from pcite.corpus import load_papers
-    from pcite.extract import load_claims
-    papers, claims = {p.doi: p for p in load_papers()}, load_claims()
-    NANOPUBS.mkdir(parents=True, exist_ok=True)
+def process_claims(
+    claims_path: Path | None = None,
+    nanopubs_path: Path | None = None,
+    papers_loader=None,
+    claims_loader=None,
+) -> int:
+    claims_path = claims_path or DATA_CLAIMS
+    nanopubs_path = nanopubs_path or NANOPUBS
+    if papers_loader is None:
+        from pcite.corpus import load_papers
+        papers_loader = load_papers
+    if claims_loader is None:
+        from pcite.extract import load_claims
+        claims_loader = load_claims
+    papers, claims = {p.doi: p for p in papers_loader()}, claims_loader()
+    nanopubs_path.mkdir(parents=True, exist_ok=True)
     upgraded = [upgrade_claim(c, papers) for c in claims]
     for c in upgraded:
         to_nanopub(c).serialize(
-            destination=str(NANOPUBS / f"{c.id}.trig"), format="trig"
+            destination=str(nanopubs_path / f"{c.id}.trig"), format="trig"
         )
-    with DATA_CLAIMS.open("w") as f:
+    with claims_path.open("w") as f:
         for c in upgraded:
             f.write(c.model_dump_json() + "\n")
     by_class: dict[str, int] = {}
