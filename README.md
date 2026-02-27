@@ -34,13 +34,16 @@ pCite loses predictably when no physically-grounded claims exist. This is the ex
 
 **Sensitivity analysis — weight ratio robustness**
 
-| Physical : TextDerived ratio | Precision@50 | Lift over traditional |
-|---|---|---|
-| 1:1 (null) | 0.50 | 1.00x |
-| 2:1 | 0.60 | 1.20x |
-| 5:1 | 0.94 | 1.88x |
-| 10:1 | 1.00 | 2.00x |
-| 50:1 – 1000:1 | 1.00 | 2.00x |
+| Ratio | Precision@50 |
+|---|---|
+| 1:1 | 0.50 |
+| 2:1 | 0.60 |
+| 5:1 | 0.94 |
+| 10:1 | 1.00 |
+| 50:1 | 1.00 |
+| 100:1 | 1.00 |
+| 500:1 | 1.00 |
+| 1000:1 | 1.00 |
 
 Precision@50 lift saturates at ratio ≥ 10:1 and is insensitive to the exact production value (1000:1). The result is not an artifact of a specific weight choice. Script: `sensitivity_analysis.py`; data: `data/sensitivity/`.
 

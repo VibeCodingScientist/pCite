@@ -105,16 +105,12 @@ def run_sensitivity() -> list[dict]:
         reweighted = reweight_records(records, weights)
         p = precision_at_k(reweighted, k=50, score_key="base_weight")
         row = {
-            "ratio":                 ratio,
-            "weights":               {k: round(v, 4) for k, v in weights.items()},
-            "precision_pcite":       p["precision_pcite"],
-            "precision_traditional": p["precision_traditional"],
-            "lift":                  p["lift"],
+            "ratio":          ratio,
+            "precision_at_50": p["precision_pcite"],
         }
         results.append(row)
-        print(f"  ratio={ratio:>5d}  P@50_pcite={p['precision_pcite']:.3f}  "
-              f"P@50_trad={p['precision_traditional']:.3f}  "
-              f"lift={p['lift']:.2f}x", file=sys.stderr)
+        print(f"  ratio={ratio:>5d}  P@50={p['precision_pcite']:.2f}",
+              file=sys.stderr)
 
     # Write table
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -135,25 +131,17 @@ def run_sensitivity() -> list[dict]:
 
 def make_figure(results: list[dict]) -> plt.Figure:
     ratios = [r["ratio"] for r in results]
-    p_pcite = [r["precision_pcite"] for r in results]
-    p_trad = [r["precision_traditional"] for r in results]
+    p_at_50 = [r["precision_at_50"] for r in results]
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
 
-    # pCite line
-    ax.plot(ratios, p_pcite, "-o", color="#d62728", ms=7, lw=2,
+    # pCite curve
+    ax.plot(ratios, p_at_50, "-o", color="#d62728", ms=7, lw=2,
             label="pCite (validation-weighted)", zorder=3)
 
-    # Traditional baseline (flat)
-    ax.axhline(p_trad[0], ls="--", color="#888888", lw=1.5,
-               label="Traditional (replication count)")
-
-    # Current production ratio
-    ax.axvline(1000, ls=":", color="#555555", lw=1, alpha=0.7)
-    ax.annotate("current\n(1000:1)", xy=(1000, p_pcite[-1]),
-                xytext=(400, p_pcite[-1] - 0.06),
-                fontsize=9, color="#555555",
-                arrowprops=dict(arrowstyle="->", color="#555555", lw=0.8))
+    # Traditional citation-count baseline
+    ax.axhline(0.50, ls="--", color="#888888", lw=1.5,
+               label="Traditional (citation count)")
 
     ax.set_xscale("log")
     ax.set_xlabel("Physical : TextDerived weight ratio")
