@@ -129,3 +129,79 @@ def test_deposit_quality_ordering():
 def test_deposit_quality_empty():
     from pride_corpus import compute_deposit_quality
     assert compute_deposit_quality({}) == {}
+
+
+# Deposit-first search terms
+
+def test_deposit_first_terms_superset():
+    """DEPOSIT_FIRST_TERMS includes all of SEARCH_TERMS plus extras."""
+    from pride_corpus import SEARCH_TERMS, DEPOSIT_FIRST_TERMS
+    for term in SEARCH_TERMS:
+        assert term in DEPOSIT_FIRST_TERMS
+    assert len(DEPOSIT_FIRST_TERMS) > len(SEARCH_TERMS)
+
+
+def test_deposit_first_terms_has_broad_terms():
+    """Deposit-first mode includes broader proteomics terms."""
+    from pride_corpus import DEPOSIT_FIRST_TERMS
+    broad = {"proteomics mass spectrometry", "quantitative proteomics",
+             "phosphoproteomics", "DIA proteomics"}
+    for term in broad:
+        assert term in DEPOSIT_FIRST_TERMS
+
+
+# Boundary investigation helpers
+
+def test_boundary_subsample_at_coverage():
+    """subsample_at_coverage returns correct approximate coverage."""
+    import numpy as np
+    from boundary_investigation import subsample_at_coverage
+
+    physical = [{"claim_id": f"phys_{i}", "validation_class": "PhysicalMeasurement"}
+                for i in range(100)]
+    non_physical = [{"claim_id": f"text_{i}", "validation_class": "TextDerived"}
+                    for i in range(100)]
+
+    rng = np.random.default_rng(42)
+    result = subsample_at_coverage(physical, non_physical, 0.20, rng)
+
+    n_phys = sum(1 for r in result if r["validation_class"] == "PhysicalMeasurement")
+    actual_cov = n_phys / len(result)
+    assert 0.15 <= actual_cov <= 0.30  # within tolerance of rounding
+
+
+def test_boundary_subsample_preserves_non_physical():
+    """Non-physical records are always fully included."""
+    import numpy as np
+    from boundary_investigation import subsample_at_coverage
+
+    physical = [{"claim_id": f"phys_{i}", "validation_class": "PhysicalMeasurement"}
+                for i in range(200)]
+    non_physical = [{"claim_id": f"text_{i}", "validation_class": "TextDerived"}
+                    for i in range(50)]
+
+    rng = np.random.default_rng(0)
+    result = subsample_at_coverage(physical, non_physical, 0.10, rng)
+
+    text_ids = {r["claim_id"] for r in result if r["validation_class"] == "TextDerived"}
+    assert text_ids == {f"text_{i}" for i in range(50)}
+
+
+def test_boundary_precision_at_k():
+    """Local precision_at_k matches expected value."""
+    from boundary_investigation import precision_at_k
+
+    ranked = ["a", "b", "c", "d", "e"]
+    validated = {"a", "c", "e"}
+    assert precision_at_k(ranked, 5, validated) == pytest.approx(0.6)
+    assert precision_at_k(ranked, 2, validated) == pytest.approx(0.5)
+
+
+def test_boundary_ndcg_at_k():
+    """NDCG@k returns 1.0 for perfect ranking."""
+    from boundary_investigation import ndcg_at_k
+
+    # Perfect ranking: all validated first
+    ranked = ["a", "b", "c", "d", "e"]
+    validated = {"a", "b"}
+    assert ndcg_at_k(ranked, 5, validated) == pytest.approx(1.0)

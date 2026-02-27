@@ -6,8 +6,9 @@ Mirrors run_poc.py with PRIDE-specific paths and domain="proteomics".
 
 Usage:
   python run_pride_poc.py
-  python run_pride_poc.py --dry-run      # evaluate cached data, skip API calls
-  python run_pride_poc.py --skip-corpus  # skip corpus build, run extract+validate+graph+eval
+  python run_pride_poc.py --dry-run          # evaluate cached data, skip API calls
+  python run_pride_poc.py --skip-corpus      # skip corpus build, run extract+validate+graph+eval
+  python run_pride_poc.py --deposit-first    # deposit-first corpus (no disease supplement)
 """
 
 import asyncio, sys, argparse
@@ -33,13 +34,19 @@ def _load_pride_claims():
     return extract.load_claims(CLAIMS_PATH)
 
 
-async def main(dry_run: bool = False, skip_corpus: bool = False) -> int:
-    print("\npCite PoC — PRIDE Cancer Proteomics Corpus\n")
+async def main(dry_run: bool = False, skip_corpus: bool = False,
+               deposit_first: bool = False) -> int:
+    mode_label = "deposit-first" if deposit_first else "standard"
+    print(f"\npCite PoC — PRIDE Cancer Proteomics Corpus ({mode_label})\n")
 
     if not dry_run:
         if not skip_corpus:
-            print("1/5  Corpus (PRIDE-first + PubMed disease cluster)...")
-            print(f"     {await pride_corpus.build_corpus()} papers\n")
+            if deposit_first:
+                print("1/5  Corpus (deposit-first — all papers have PRIDE deposits)...")
+                print(f"     {await pride_corpus.build_deposit_first_corpus()} papers\n")
+            else:
+                print("1/5  Corpus (PRIDE-first + PubMed disease cluster)...")
+                print(f"     {await pride_corpus.build_corpus()} papers\n")
 
         print("2/5  Extraction (Claude Sonnet — proteomics domain)...")
         print(f"     {await extract.process_corpus(
@@ -100,5 +107,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--skip-corpus", action="store_true")
+    p.add_argument("--deposit-first", action="store_true",
+                   help="Use deposit-first corpus (no disease supplement)")
     args = p.parse_args()
-    sys.exit(asyncio.run(main(args.dry_run, args.skip_corpus)))
+    sys.exit(asyncio.run(main(args.dry_run, args.skip_corpus, args.deposit_first)))
