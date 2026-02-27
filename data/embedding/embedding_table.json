@@ -1,0 +1,38 @@
+[
+  {
+    "metric": "P@10",
+    "pcite": 0.8,
+    "traditional": 0.8,
+    "embedding": 0.8
+  },
+  {
+    "metric": "P@25",
+    "pcite": 0.92,
+    "traditional": 0.68,
+    "embedding": 0.88
+  },
+  {
+    "metric": "P@50",
+    "pcite": 0.94,
+    "traditional": 0.5,
+    "embedding": 0.72
+  },
+  {
+    "metric": "P@100",
+    "pcite": 0.94,
+    "traditional": 0.28,
+    "embedding": 0.68
+  },
+  {
+    "metric": "P@200",
+    "pcite": 0.925,
+    "traditional": 0.285,
+    "embedding": 0.63
+  },
+  {
+    "metric": "NDCG@50",
+    "pcite": 0.9376,
+    "traditional": 0.5967,
+    "embedding": 0.7706
+  }
+]

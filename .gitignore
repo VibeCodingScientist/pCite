@@ -21,5 +21,8 @@ frontend.md
 build_citation_cache.py
 run_steps345.py
 
+# Cached embedding arrays
+*.npy
+
 # iCloud duplicates (files with " 2" suffix)
 * 2.*
