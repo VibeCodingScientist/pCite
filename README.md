@@ -32,6 +32,18 @@ Evaluated on 8,761 metabolomics claims from 1,994 papers (2021–2026), with 30,
 
 pCite loses predictably when no physically-grounded claims exist. This is the expected behaviour: the 1,000-fold weight gap has nothing to act on. The negative control confirms the mechanism, not a failure. Raw data in `data/negative-control/`.
 
+**Sensitivity analysis — weight ratio robustness**
+
+| Physical : TextDerived ratio | Precision@50 | Lift over traditional |
+|---|---|---|
+| 1:1 (null) | 0.50 | 1.00x |
+| 2:1 | 0.60 | 1.20x |
+| 5:1 | 0.94 | 1.88x |
+| 10:1 | 1.00 | 2.00x |
+| 50:1 – 1000:1 | 1.00 | 2.00x |
+
+Precision@50 lift saturates at ratio ≥ 10:1 and is insensitive to the exact production value (1000:1). The result is not an artifact of a specific weight choice. Script: `sensitivity_analysis.py`; data: `data/sensitivity/`.
+
 ---
 
 ## How it works
@@ -120,10 +132,12 @@ data/
   graph.graphml
   results.json
   negative-control/
+  sensitivity/
 figures/
   fig1_rank_comparison.pdf
   fig2_score_dist.pdf
   fig3_precision_at_k.pdf
+  fig_sensitivity.pdf
 tests/             — 25 tests, no API keys needed
 docs/              — static site (GitHub Pages)
 ```
