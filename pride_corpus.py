@@ -30,6 +30,10 @@ DATA_DIR = Path("data/pride")
 PAPERS_FILE = DATA_DIR / "papers.jsonl"
 QUALITY_FILE = DATA_DIR / "deposit_quality.json"
 
+# Checkpoint files for resumable build_deposit_first_corpus()
+_CKPT_PROJECTS = DATA_DIR / ".ckpt_projects.json"
+_CKPT_NEIGHBOURS = DATA_DIR / ".ckpt_neighbours.json"
+
 SEARCH_TERMS = [
     "cancer proteomics",
     "tumor proteomics",
@@ -321,108 +325,151 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
       - Phase C: citation-neighbourhood sampling via OpenAlex
       - target_coverage controls deposit-paper fraction (default 50%)
       - Fallback PubMed search by project title for projects with 0 PMIDs
+
+    Checkpoints:
+      - .ckpt_projects.json  — saved after Phase A+B+B2 (PRIDE search + PMID parsing)
+      - .ckpt_neighbours.json — saved after Phase C3 (neighbour DOI collection)
+      On resume, skips to the earliest incomplete phase.
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+    # ── Check for existing checkpoints ────────────────────────────────
+    skip_to_c4 = False
+    skip_to_c1 = False
+
+    if _CKPT_NEIGHBOURS.exists():
+        print("  RESUME: loading .ckpt_neighbours.json — skipping to C4",
+              file=sys.stderr)
+        ckpt = json.loads(_CKPT_NEIGHBOURS.read_text())
+        all_projects = ckpt["projects"]
+        pmid_to_accession = ckpt["pmid_to_accession"]
+        deposit_dois = ckpt["deposit_dois"]
+        neighbour_dois = set(ckpt["neighbour_dois"])
+        skip_to_c4 = True
+    elif _CKPT_PROJECTS.exists():
+        print("  RESUME: loading .ckpt_projects.json — skipping to C1",
+              file=sys.stderr)
+        ckpt = json.loads(_CKPT_PROJECTS.read_text())
+        all_projects = ckpt["projects"]
+        pmid_to_accession = ckpt["pmid_to_accession"]
+        skip_to_c1 = True
+
     async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
 
-        # Phase A: Search PRIDE with broader terms
-        print("  Phase A: PRIDE project search (deposit-first)...", file=sys.stderr)
-        all_projects: dict[str, dict] = {}
-        for term in DEPOSIT_FIRST_TERMS:
-            projects = await _search_pride(term, client)
-            for proj in projects:
-                acc = proj.get("accession", "")
-                if acc and acc not in all_projects and _is_human_complete(proj):
-                    all_projects[acc] = proj
-            print(f"  '{term}': {len(projects)} results, "
-                  f"{len(all_projects)} unique COMPLETE/human total",
+        if not skip_to_c4 and not skip_to_c1:
+            # Phase A: Search PRIDE with broader terms
+            print("  Phase A: PRIDE project search (deposit-first)...", file=sys.stderr)
+            all_projects: dict[str, dict] = {}
+            for term in DEPOSIT_FIRST_TERMS:
+                projects = await _search_pride(term, client)
+                for proj in projects:
+                    acc = proj.get("accession", "")
+                    if acc and acc not in all_projects and _is_human_complete(proj):
+                        all_projects[acc] = proj
+                print(f"  '{term}': {len(projects)} results, "
+                      f"{len(all_projects)} unique COMPLETE/human total",
+                      file=sys.stderr)
+                await asyncio.sleep(0.3)
+
+            print(f"  {len(all_projects)} total PRIDE projects after dedup",
                   file=sys.stderr)
-            await asyncio.sleep(0.3)
 
-        print(f"  {len(all_projects)} total PRIDE projects after dedup",
-              file=sys.stderr)
+            # Phase B: Parse PubMed IDs from PRIDE references
+            print("  Phase B: Parsing PubMed IDs from references...", file=sys.stderr)
+            pmid_to_accession: dict[str, str] = {}
+            projects_with_pmids: set[str] = set()
+            for acc, proj in all_projects.items():
+                refs = proj.get("references", [])
+                pmids = _parse_pride_pmids(refs)
+                for pmid in pmids:
+                    if pmid not in pmid_to_accession:
+                        pmid_to_accession[pmid] = acc
+                    projects_with_pmids.add(acc)
 
-        # Phase B: Parse PubMed IDs from PRIDE references
-        print("  Phase B: Parsing PubMed IDs from references...", file=sys.stderr)
-        pmid_to_accession: dict[str, str] = {}
-        projects_with_pmids: set[str] = set()
-        for acc, proj in all_projects.items():
-            refs = proj.get("references", [])
-            pmids = _parse_pride_pmids(refs)
-            for pmid in pmids:
-                if pmid not in pmid_to_accession:
-                    pmid_to_accession[pmid] = acc
-                projects_with_pmids.add(acc)
+            print(f"  {len(pmid_to_accession)} unique PMIDs from PRIDE references",
+                  file=sys.stderr)
 
-        print(f"  {len(pmid_to_accession)} unique PMIDs from PRIDE references",
-              file=sys.stderr)
+            # Phase B2: Fallback — search PubMed by project title for projects with 0 PMIDs
+            projects_without = [
+                acc for acc in all_projects if acc not in projects_with_pmids
+            ]
+            if projects_without:
+                print(f"  Phase B2: PubMed title search for {len(projects_without)} "
+                      f"projects without PMIDs...", file=sys.stderr)
+                found = 0
+                for acc in projects_without:
+                    title = all_projects[acc].get("title", "")
+                    if not title:
+                        continue
+                    query = f'"{title}"[Title]'
+                    try:
+                        pmids = await _search_pmids(query, 5, client)
+                        for pmid in pmids:
+                            if pmid not in pmid_to_accession:
+                                pmid_to_accession[pmid] = acc
+                                found += 1
+                    except Exception as e:
+                        print(f"    {acc} title search failed: {e}", file=sys.stderr)
+                    await asyncio.sleep(0.4)
+                print(f"  Phase B2: found {found} additional PMIDs", file=sys.stderr)
 
-        # Phase B2: Fallback — search PubMed by project title for projects with 0 PMIDs
-        projects_without = [
-            acc for acc in all_projects if acc not in projects_with_pmids
-        ]
-        if projects_without:
-            print(f"  Phase B2: PubMed title search for {len(projects_without)} "
-                  f"projects without PMIDs...", file=sys.stderr)
-            found = 0
-            for acc in projects_without:
-                title = all_projects[acc].get("title", "")
-                if not title:
-                    continue
-                # Search PubMed with project title
-                query = f'"{title}"[Title]'
-                try:
-                    pmids = await _search_pmids(query, 5, client)
-                    for pmid in pmids:
-                        if pmid not in pmid_to_accession:
-                            pmid_to_accession[pmid] = acc
-                            found += 1
-                except Exception as e:
-                    print(f"    {acc} title search failed: {e}", file=sys.stderr)
-                await asyncio.sleep(0.4)
-            print(f"  Phase B2: found {found} additional PMIDs", file=sys.stderr)
+            # ── Checkpoint: save projects + pmid mapping ──────────────
+            _CKPT_PROJECTS.write_text(json.dumps({
+                "projects": all_projects,
+                "pmid_to_accession": pmid_to_accession,
+            }))
+            print("  CHECKPOINT: .ckpt_projects.json saved", file=sys.stderr)
 
         # Phase C: Citation-neighbourhood enrichment (OpenAlex)
-        print("  Phase C: Citation-neighbourhood sampling...", file=sys.stderr)
+        if not skip_to_c4:
+            print("  Phase C: Citation-neighbourhood sampling...", file=sys.stderr)
 
-        # C1: Batch-fetch deposit papers to get their DOIs
-        deposit_pmid_list = sorted(pmid_to_accession.keys())
-        print(f"  {len(deposit_pmid_list)} deposit-linked PMIDs to fetch from PubMed...",
-              file=sys.stderr)
-
-        deposit_articles: list[dict] = []
-        batch_size = 200
-        for i in range(0, len(deposit_pmid_list), batch_size):
-            batch = deposit_pmid_list[i:i + batch_size]
-            articles = await _fetch_batch(batch, client)
-            deposit_articles.extend(articles)
-            print(f"  batch {i // batch_size + 1}: {len(articles)} papers parsed",
+            # C1: Batch-fetch deposit papers to get their DOIs
+            deposit_pmid_list = sorted(pmid_to_accession.keys())
+            print(f"  {len(deposit_pmid_list)} deposit-linked PMIDs to fetch from PubMed...",
                   file=sys.stderr)
-            if i + batch_size < len(deposit_pmid_list):
-                await asyncio.sleep(0.5)
 
-        deposit_dois = [art["doi"] for art in deposit_articles if art.get("doi")]
-        print(f"  {len(deposit_dois)} deposit DOIs for OpenAlex lookup",
-              file=sys.stderr)
+            deposit_articles: list[dict] = []
+            batch_size = 200
+            for i in range(0, len(deposit_pmid_list), batch_size):
+                batch = deposit_pmid_list[i:i + batch_size]
+                articles = await _fetch_batch(batch, client)
+                deposit_articles.extend(articles)
+                print(f"  batch {i // batch_size + 1}: {len(articles)} papers parsed",
+                      file=sys.stderr)
+                if i + batch_size < len(deposit_pmid_list):
+                    await asyncio.sleep(0.5)
 
-        # C2: Resolve DOIs → OpenAlex IDs
-        oa_map = await _resolve_openalex_ids(deposit_dois, client)
+            deposit_dois = [art["doi"] for art in deposit_articles if art.get("doi")]
+            print(f"  {len(deposit_dois)} deposit DOIs for OpenAlex lookup",
+                  file=sys.stderr)
 
-        # C3: Find citation neighbours (citing + referenced papers)
-        neighbour_dois: set[str] = set()
-        deposit_doi_set = set(deposit_dois)
+            # C2: Resolve DOIs → OpenAlex IDs
+            oa_map = await _resolve_openalex_ids(deposit_dois, client)
 
-        for doi, oa_id in oa_map.items():
-            citing = await _citing_dois(oa_id, client)
-            referenced = await _referenced_dois(oa_id, client)
-            for d in citing + referenced:
-                if d not in deposit_doi_set:
-                    neighbour_dois.add(d)
-            await asyncio.sleep(0.1)
+            # C3: Find citation neighbours (citing + referenced papers)
+            neighbour_dois: set[str] = set()
+            deposit_doi_set = set(deposit_dois)
 
-        print(f"  {len(neighbour_dois)} unique neighbour DOIs found",
-              file=sys.stderr)
+            for doi, oa_id in oa_map.items():
+                citing = await _citing_dois(oa_id, client)
+                referenced = await _referenced_dois(oa_id, client)
+                for d in citing + referenced:
+                    if d not in deposit_doi_set:
+                        neighbour_dois.add(d)
+                await asyncio.sleep(0.1)
+
+            print(f"  {len(neighbour_dois)} unique neighbour DOIs found",
+                  file=sys.stderr)
+
+            # ── Checkpoint: save neighbours ───────────────────────────
+            _CKPT_NEIGHBOURS.write_text(json.dumps({
+                "projects": all_projects,
+                "pmid_to_accession": pmid_to_accession,
+                "deposit_dois": deposit_dois,
+                "neighbour_dois": sorted(neighbour_dois),
+            }))
+            print("  CHECKPOINT: .ckpt_neighbours.json saved", file=sys.stderr)
 
         # C4: Resolve neighbour DOIs → PMIDs via OpenAlex
         neighbour_pmid_map = await _dois_to_pmids(
@@ -437,6 +484,22 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
               file=sys.stderr)
 
         # C5: Compute how many negatives to add for target coverage
+        # Re-fetch deposit articles if we resumed from checkpoint
+        if skip_to_c4:
+            deposit_pmid_list = sorted(pmid_to_accession.keys())
+            deposit_articles = []
+            batch_size = 200
+            print(f"  Re-fetching {len(deposit_pmid_list)} deposit PMIDs from PubMed...",
+                  file=sys.stderr)
+            for i in range(0, len(deposit_pmid_list), batch_size):
+                batch = deposit_pmid_list[i:i + batch_size]
+                articles = await _fetch_batch(batch, client)
+                deposit_articles.extend(articles)
+                if i + batch_size < len(deposit_pmid_list):
+                    await asyncio.sleep(0.5)
+        else:
+            batch_size = 200
+
         n_deposit = len(deposit_articles)
         if target_coverage > 0 and n_deposit > 0 and available_pmids:
             n_needed = int(n_deposit / target_coverage) - n_deposit
@@ -488,6 +551,12 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
     # Compute and write deposit quality
     quality = compute_deposit_quality(all_projects)
     QUALITY_FILE.write_text(json.dumps(quality, indent=2))
+
+    # ── Clean up checkpoint files ─────────────────────────────────────
+    for ckpt_file in (_CKPT_PROJECTS, _CKPT_NEIGHBOURS):
+        if ckpt_file.exists():
+            ckpt_file.unlink()
+    print("  CHECKPOINT: cleaned up checkpoint files", file=sys.stderr)
 
     deposited = sum(1 for p in papers if p.deposit_id)
     if papers:
