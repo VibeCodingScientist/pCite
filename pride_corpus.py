@@ -17,11 +17,12 @@ Output: data/pride/papers.jsonl + data/pride/deposit_quality.json
 Run:    python pride_corpus.py
 """
 
-import asyncio, json, math, re, sys
+import asyncio, json, math, random, re, sys
 from pathlib import Path
 import httpx
 from pcite.models import Paper
 from pcite.corpus import _fetch_batch, _parse_article, _search_pmids, _ncbi_params
+from pcite.graph import _resolve_openalex_ids, _citing_dois, OPENALEX, _sem
 from pcite import config
 
 PRIDE_SEARCH = "https://www.ebi.ac.uk/pride/ws/archive/v2/search/projects"
@@ -155,6 +156,71 @@ def compute_deposit_quality(projects: dict[str, dict]) -> dict[str, float]:
     }
 
 
+async def _referenced_dois(openalex_id: str, client: httpx.AsyncClient) -> list[str]:
+    """Papers in the bibliography of this work (via referenced_works)."""
+    async with _sem:
+        try:
+            resp = await client.get(
+                openalex_id,  # OpenAlex IDs are full URLs
+                params={"select": "referenced_works", "mailto": config.OPENALEX_EMAIL},
+                timeout=30,
+            )
+            ref_ids = resp.json().get("referenced_works", [])
+        except Exception:
+            return []
+    if not ref_ids:
+        return []
+    # Batch-resolve OA IDs → DOIs
+    dois: list[str] = []
+    batch_size = 50
+    for i in range(0, len(ref_ids), batch_size):
+        batch = ref_ids[i : i + batch_size]
+        pipe_filter = "|".join(batch)
+        async with _sem:
+            try:
+                resp = await client.get(OPENALEX, params={
+                    "filter": f"openalex:{pipe_filter}",
+                    "select": "doi",
+                    "per-page": batch_size,
+                    "mailto": config.OPENALEX_EMAIL,
+                }, timeout=30)
+                for w in resp.json().get("results", []):
+                    if w.get("doi"):
+                        dois.append(w["doi"].replace("https://doi.org/", ""))
+            except Exception:
+                pass
+    return dois
+
+
+async def _dois_to_pmids(
+    dois: list[str], client: httpx.AsyncClient,
+) -> dict[str, str]:
+    """Batch-resolve DOIs to PMIDs using OpenAlex ids.pmid field."""
+    mapping: dict[str, str] = {}
+    batch_size = 50
+    for i in range(0, len(dois), batch_size):
+        batch = dois[i : i + batch_size]
+        pipe_filter = "|".join(f"https://doi.org/{d}" for d in batch)
+        async with _sem:
+            try:
+                resp = await client.get(OPENALEX, params={
+                    "filter": f"doi:{pipe_filter}",
+                    "select": "doi,ids",
+                    "per-page": batch_size,
+                    "mailto": config.OPENALEX_EMAIL,
+                }, timeout=30)
+                for w in resp.json().get("results", []):
+                    doi = (w.get("doi") or "").replace("https://doi.org/", "")
+                    pmid = (w.get("ids") or {}).get("pmid", "")
+                    if doi and pmid:
+                        # OpenAlex returns pmid as "https://pubmed.ncbi.nlm.nih.gov/12345"
+                        pmid = pmid.rsplit("/", 1)[-1]
+                        mapping[doi] = pmid
+            except Exception:
+                pass
+    return mapping
+
+
 async def build_corpus(max_disease_papers: int | None = None) -> int:
     max_disease_papers = max_disease_papers or config.PUBMED_MAX_PER_QUERY
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -247,13 +313,13 @@ async def build_corpus(max_disease_papers: int | None = None) -> int:
     return len(papers)
 
 
-async def build_deposit_first_corpus() -> int:
-    """Deposit-first corpus: every paper must have a PRIDE accession.
+async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
+    """Deposit-first corpus with citation-neighbourhood negatives.
 
     Differences from build_corpus():
-      - No Phase C (disease-focused PubMed supplement)
       - Broader PRIDE search terms (DEPOSIT_FIRST_TERMS)
-      - Only papers with deposit_id are kept
+      - Phase C: citation-neighbourhood sampling via OpenAlex
+      - target_coverage controls deposit-paper fraction (default 50%)
       - Fallback PubMed search by project title for projects with 0 PMIDs
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -317,35 +383,101 @@ async def build_deposit_first_corpus() -> int:
                 await asyncio.sleep(0.4)
             print(f"  Phase B2: found {found} additional PMIDs", file=sys.stderr)
 
-        # No Phase C — deposit-first mode skips disease supplement
+        # Phase C: Citation-neighbourhood enrichment (OpenAlex)
+        print("  Phase C: Citation-neighbourhood sampling...", file=sys.stderr)
 
-        # Batch-fetch from PubMed — only deposit-linked PMIDs
-        pmid_list = sorted(pmid_to_accession.keys())
-        print(f"  {len(pmid_list)} deposit-linked PMIDs to fetch from PubMed...",
+        # C1: Batch-fetch deposit papers to get their DOIs
+        deposit_pmid_list = sorted(pmid_to_accession.keys())
+        print(f"  {len(deposit_pmid_list)} deposit-linked PMIDs to fetch from PubMed...",
               file=sys.stderr)
 
-        all_articles: list[dict] = []
+        deposit_articles: list[dict] = []
         batch_size = 200
-        for i in range(0, len(pmid_list), batch_size):
-            batch = pmid_list[i:i + batch_size]
+        for i in range(0, len(deposit_pmid_list), batch_size):
+            batch = deposit_pmid_list[i:i + batch_size]
             articles = await _fetch_batch(batch, client)
-            all_articles.extend(articles)
+            deposit_articles.extend(articles)
             print(f"  batch {i // batch_size + 1}: {len(articles)} papers parsed",
                   file=sys.stderr)
-            if i + batch_size < len(pmid_list):
+            if i + batch_size < len(deposit_pmid_list):
                 await asyncio.sleep(0.5)
 
-        # Build Paper objects — all have deposit_id by construction
+        deposit_dois = [art["doi"] for art in deposit_articles if art.get("doi")]
+        print(f"  {len(deposit_dois)} deposit DOIs for OpenAlex lookup",
+              file=sys.stderr)
+
+        # C2: Resolve DOIs → OpenAlex IDs
+        oa_map = await _resolve_openalex_ids(deposit_dois, client)
+
+        # C3: Find citation neighbours (citing + referenced papers)
+        neighbour_dois: set[str] = set()
+        deposit_doi_set = set(deposit_dois)
+
+        for doi, oa_id in oa_map.items():
+            citing = await _citing_dois(oa_id, client)
+            referenced = await _referenced_dois(oa_id, client)
+            for d in citing + referenced:
+                if d not in deposit_doi_set:
+                    neighbour_dois.add(d)
+            await asyncio.sleep(0.1)
+
+        print(f"  {len(neighbour_dois)} unique neighbour DOIs found",
+              file=sys.stderr)
+
+        # C4: Resolve neighbour DOIs → PMIDs via OpenAlex
+        neighbour_pmid_map = await _dois_to_pmids(
+            list(neighbour_dois), client
+        )
+        # Remove any PMIDs already in deposit set
+        available_pmids = {
+            pmid for doi, pmid in neighbour_pmid_map.items()
+            if pmid not in pmid_to_accession
+        }
+        print(f"  {len(available_pmids)} neighbour PMIDs with PubMed IDs",
+              file=sys.stderr)
+
+        # C5: Compute how many negatives to add for target coverage
+        n_deposit = len(deposit_articles)
+        if target_coverage > 0 and n_deposit > 0 and available_pmids:
+            n_needed = int(n_deposit / target_coverage) - n_deposit
+            n_sample = min(max(n_needed, 0), len(available_pmids))
+            sampled = random.sample(sorted(available_pmids), n_sample)
+            print(f"  Sampling {n_sample} neighbours for ~{target_coverage:.0%} coverage",
+                  file=sys.stderr)
+        else:
+            sampled = []
+
+        # C6: Fetch sampled neighbour PMIDs from PubMed
+        neighbour_articles: list[dict] = []
+        if sampled:
+            for i in range(0, len(sampled), batch_size):
+                batch = sampled[i:i + batch_size]
+                articles = await _fetch_batch(batch, client)
+                neighbour_articles.extend(articles)
+                print(f"  neighbour batch {i // batch_size + 1}: "
+                      f"{len(articles)} papers parsed", file=sys.stderr)
+                if i + batch_size < len(sampled):
+                    await asyncio.sleep(0.5)
+
+        # Build Paper objects
         papers = []
-        for art in all_articles:
+        # Deposit papers (positives)
+        for art in deposit_articles:
             pmid = art.get("pmid", "")
             deposit_id = pmid_to_accession.get(pmid)
             if not deposit_id:
-                continue  # safety — should not happen
+                continue
             papers.append(Paper(
                 doi=art["doi"], pmid=pmid, title=art["title"],
                 abstract=art["abstract"], deposit_id=deposit_id,
                 year=art["year"],
+            ))
+        # Neighbour papers (negatives — no deposit_id)
+        for art in neighbour_articles:
+            papers.append(Paper(
+                doi=art["doi"], pmid=art.get("pmid", ""),
+                title=art["title"], abstract=art["abstract"],
+                deposit_id=None, year=art["year"],
             ))
 
     # Write papers
@@ -358,9 +490,12 @@ async def build_deposit_first_corpus() -> int:
     QUALITY_FILE.write_text(json.dumps(quality, indent=2))
 
     deposited = sum(1 for p in papers if p.deposit_id)
-    print(f"  {len(papers)} papers, {deposited} with PRIDE deposits "
-          f"({deposited / len(papers) * 100:.0f}% coverage)" if papers
-          else "  0 papers", file=sys.stderr)
+    if papers:
+        cov = deposited / len(papers) * 100
+        print(f"  {len(papers)} papers, {deposited} with PRIDE deposits "
+              f"({cov:.0f}% coverage)", file=sys.stderr)
+    else:
+        print("  0 papers", file=sys.stderr)
     if quality:
         print(f"  {len(quality)} projects with quality scores "
               f"(range {min(quality.values()):.1f}-{max(quality.values()):.1f})",

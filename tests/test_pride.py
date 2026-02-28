@@ -1,6 +1,7 @@
 """tests/test_pride.py — PRIDE corpus + graded deposit quality tests (no network)."""
 
 import math
+import httpx
 import pytest
 from pcite.models import (
     Claim, Entity, Paper, Predicate, ProvenanceEntry,
@@ -205,3 +206,75 @@ def test_boundary_ndcg_at_k():
     ranked = ["a", "b", "c", "d", "e"]
     validated = {"a", "b"}
     assert ndcg_at_k(ranked, 5, validated) == pytest.approx(1.0)
+
+
+# Citation-neighbourhood helpers
+
+
+@pytest.mark.asyncio
+async def test_referenced_dois():
+    """_referenced_dois resolves referenced_works → DOIs via OpenAlex."""
+    from unittest.mock import AsyncMock, MagicMock
+    from pride_corpus import _referenced_dois
+
+    client = AsyncMock(spec=httpx.AsyncClient)
+
+    # First call: GET work by ID → referenced_works
+    ref_resp = MagicMock()
+    ref_resp.json.return_value = {
+        "referenced_works": [
+            "https://openalex.org/W111",
+            "https://openalex.org/W222",
+        ]
+    }
+    # Second call: batch-resolve OA IDs → DOIs
+    doi_resp = MagicMock()
+    doi_resp.json.return_value = {
+        "results": [
+            {"doi": "https://doi.org/10.1000/ref1"},
+            {"doi": "https://doi.org/10.1000/ref2"},
+        ]
+    }
+    client.get = AsyncMock(side_effect=[ref_resp, doi_resp])
+
+    result = await _referenced_dois("https://openalex.org/W999", client)
+    assert set(result) == {"10.1000/ref1", "10.1000/ref2"}
+
+
+@pytest.mark.asyncio
+async def test_dois_to_pmids():
+    """_dois_to_pmids resolves DOIs → PMIDs via OpenAlex ids.pmid."""
+    from unittest.mock import AsyncMock, MagicMock
+    from pride_corpus import _dois_to_pmids
+
+    client = AsyncMock(spec=httpx.AsyncClient)
+    resp = MagicMock()
+    resp.json.return_value = {
+        "results": [
+            {"doi": "https://doi.org/10.1000/a",
+             "ids": {"pmid": "https://pubmed.ncbi.nlm.nih.gov/11111"}},
+            {"doi": "https://doi.org/10.1000/b",
+             "ids": {"pmid": "https://pubmed.ncbi.nlm.nih.gov/22222"}},
+            {"doi": "https://doi.org/10.1000/c", "ids": {}},  # no PMID
+        ]
+    }
+    client.get = AsyncMock(return_value=resp)
+
+    result = await _dois_to_pmids(["10.1000/a", "10.1000/b", "10.1000/c"], client)
+    assert result == {"10.1000/a": "11111", "10.1000/b": "22222"}
+
+
+def test_target_coverage_calculation():
+    """n_needed = n_deposit / target_coverage - n_deposit."""
+    n_deposit = 234
+    target_coverage = 0.50
+    n_needed = int(n_deposit / target_coverage) - n_deposit
+    assert n_needed == 234  # 468 total - 234 deposit = 234 neighbours
+
+    # Edge case: 100% coverage means 0 neighbours
+    n_needed_100 = int(n_deposit / 1.0) - n_deposit
+    assert n_needed_100 == 0
+
+    # Edge case: 25% coverage means 3x neighbours
+    n_needed_25 = int(n_deposit / 0.25) - n_deposit
+    assert n_needed_25 == 702  # 936 total - 234 = 702
