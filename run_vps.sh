@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 # run_vps.sh — Run boundary investigation + deposit-first pipeline on VPS
-# Usage: nohup bash run_vps.sh &> run_vps.log &
+# Usage:   nohup bash run_vps.sh &> run_vps.log &
+# Resume:  nohup bash run_vps.sh &>> run_vps.log &   (completed steps are skipped)
+# Fresh:   nohup bash run_vps.sh --fresh &> run_vps.log &   (delete all checkpoints first)
 set -euo pipefail
 
 cd ~/nCite
 VENV=".venv/bin/python"
 LOG="run_vps.log"
+CKPT_DIR="data/pride"
 STARTED=$(date '+%Y-%m-%d %H:%M:%S')
+
+# ── --fresh flag: remove all checkpoint files ────────────────────────
+if [[ "${1:-}" == "--fresh" ]]; then
+    echo "Cleaning all checkpoint files..."
+    rm -f "$CKPT_DIR"/.ckpt_step_* "$CKPT_DIR"/.ckpt_projects.json "$CKPT_DIR"/.ckpt_neighbours.json
+    rm -f data/pride/claims.partial.jsonl
+    echo "  Done — starting fresh run"
+fi
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 ok()   { echo "  ✅ $1"; }
@@ -66,100 +77,121 @@ fi
 # ── Boundary investigation ───────────────────────────────────────────────
 hr
 echo ""
-echo "3/7  Boundary investigation (subsampling MetaboLights data)..."
-echo "     Coverage levels: 5% 10% 15% 20% 30% 40% 50% 62.4%"
-echo "     5 random seeds each × 3 ranking methods"
-echo ""
-
-if $VENV boundary_investigation.py 2>&1; then
-    ok "Boundary investigation complete"
-    if [ -f "data/boundary_results.json" ]; then
-        ok "data/boundary_results.json written"
-    fi
-    if [ -f "figures/fig_boundary.pdf" ]; then
-        ok "figures/fig_boundary.pdf written"
-    fi
+if [ -f "$CKPT_DIR/.ckpt_step_3" ]; then
+    ok "3/7  Boundary investigation — SKIPPED (checkpoint exists)"
 else
-    BOUNDARY_EXIT=$?
-    fail "Boundary investigation failed (exit $BOUNDARY_EXIT)"
-    warn "Fallback: checking if partial results exist..."
-    if [ -f "data/boundary_results.json" ]; then
-        warn "Partial boundary_results.json exists — may be usable"
+    echo "3/7  Boundary investigation (subsampling MetaboLights data)..."
+    echo "     Coverage levels: 5% 10% 15% 20% 30% 40% 50% 62.4%"
+    echo "     5 random seeds each × 3 ranking methods"
+    echo ""
+
+    if $VENV boundary_investigation.py 2>&1; then
+        ok "Boundary investigation complete"
+        if [ -f "data/boundary_results.json" ]; then
+            ok "data/boundary_results.json written"
+        fi
+        if [ -f "figures/fig_boundary.pdf" ]; then
+            ok "figures/fig_boundary.pdf written"
+        fi
+        touch "$CKPT_DIR/.ckpt_step_3"
     else
-        warn "No boundary results — will continue with deposit-first pipeline"
+        BOUNDARY_EXIT=$?
+        fail "Boundary investigation failed (exit $BOUNDARY_EXIT)"
+        warn "Fallback: checking if partial results exist..."
+        if [ -f "data/boundary_results.json" ]; then
+            warn "Partial boundary_results.json exists — may be usable"
+            touch "$CKPT_DIR/.ckpt_step_3"
+        else
+            warn "No boundary results — will continue with deposit-first pipeline"
+        fi
     fi
 fi
 
 # ── Deposit-first corpus build ───────────────────────────────────────────
 hr
 echo ""
-echo "4/7  Deposit-first corpus build (PRIDE API + PubMed + OpenAlex)..."
-echo "     Broader search terms + citation-neighbourhood sampling"
-echo "     Target ~50% deposit coverage (deposit papers + neighbour negatives)"
-echo ""
-
-if $VENV pride_corpus.py --deposit-first 2>&1; then
-    ok "Deposit-first corpus built"
-    if [ -f "data/pride/papers.jsonl" ]; then
-        N_PAPERS=$(wc -l < data/pride/papers.jsonl)
-        N_DEPOSIT=$(grep -c '"deposit_id"' data/pride/papers.jsonl || echo 0)
-        ok "data/pride/papers.jsonl: $N_PAPERS papers"
-    fi
+if [ -f "$CKPT_DIR/.ckpt_step_4" ]; then
+    ok "4/7  Deposit-first corpus build — SKIPPED (checkpoint exists)"
 else
-    CORPUS_EXIT=$?
-    fail "Corpus build failed (exit $CORPUS_EXIT)"
-    if [ -f "data/pride/papers.jsonl" ]; then
-        warn "Fallback: existing papers.jsonl found — attempting pipeline with cached corpus"
+    echo "4/7  Deposit-first corpus build (PRIDE API + PubMed + OpenAlex)..."
+    echo "     Broader search terms + citation-neighbourhood sampling"
+    echo "     Target ~50% deposit coverage (deposit papers + neighbour negatives)"
+    echo ""
+
+    if $VENV pride_corpus.py --deposit-first 2>&1; then
+        ok "Deposit-first corpus built"
+        if [ -f "data/pride/papers.jsonl" ]; then
+            N_PAPERS=$(wc -l < data/pride/papers.jsonl)
+            N_DEPOSIT=$(grep -c '"deposit_id"' data/pride/papers.jsonl || echo 0)
+            ok "data/pride/papers.jsonl: $N_PAPERS papers"
+        fi
+        touch "$CKPT_DIR/.ckpt_step_4"
     else
-        fail "No papers.jsonl — cannot continue pipeline"
-        echo ""
-        hr
-        echo "PARTIAL RUN — boundary investigation may have succeeded"
-        echo "Fix corpus build and re-run: nohup bash run_vps.sh &> run_vps.log &"
-        hr
-        exit 1
+        CORPUS_EXIT=$?
+        fail "Corpus build failed (exit $CORPUS_EXIT)"
+        if [ -f "data/pride/papers.jsonl" ]; then
+            warn "Fallback: existing papers.jsonl found — attempting pipeline with cached corpus"
+        else
+            fail "No papers.jsonl — cannot continue pipeline"
+            echo ""
+            hr
+            echo "PARTIAL RUN — boundary investigation may have succeeded"
+            echo "Fix corpus build and re-run: nohup bash run_vps.sh &>> run_vps.log &"
+            hr
+            exit 1
+        fi
     fi
 fi
 
 # ── Full pipeline (extract → validate → graph → evaluate) ───────────────
 hr
 echo ""
-echo "5/7  Full pipeline (extract + validate + graph + evaluate)..."
-echo "     Using deposit-first corpus, --skip-corpus flag"
-echo "     This will take ~30-60 min (Claude + Gemini + OpenAlex API calls)"
-echo ""
-
-if $VENV run_pride_poc.py --deposit-first --skip-corpus 2>&1; then
-    ok "Pipeline complete"
+if [ -f "$CKPT_DIR/.ckpt_step_5" ]; then
+    ok "5/7  Full pipeline — SKIPPED (checkpoint exists)"
 else
-    PIPE_EXIT=$?
-    fail "Pipeline failed (exit $PIPE_EXIT)"
-    if [ -f "data/pride/scores.jsonl" ]; then
-        warn "Fallback: scores.jsonl exists — attempting evaluation with cached scores"
+    echo "5/7  Full pipeline (extract + validate + graph + evaluate)..."
+    echo "     Using deposit-first corpus, --skip-corpus flag"
+    echo "     This will take ~30-60 min (Claude + Gemini + OpenAlex API calls)"
+    echo ""
+
+    if $VENV run_pride_poc.py --deposit-first --skip-corpus 2>&1; then
+        ok "Pipeline complete"
+        touch "$CKPT_DIR/.ckpt_step_5"
     else
-        fail "No scores.jsonl — cannot evaluate"
-        echo ""
-        hr
-        echo "PARTIAL RUN — boundary + corpus may have succeeded"
-        echo "Debug, then re-run with: nohup $VENV run_pride_poc.py --deposit-first --skip-corpus &> pipeline.log &"
-        hr
-        exit 1
+        PIPE_EXIT=$?
+        fail "Pipeline failed (exit $PIPE_EXIT)"
+        if [ -f "data/pride/scores.jsonl" ]; then
+            warn "Fallback: scores.jsonl exists — attempting evaluation with cached scores"
+        else
+            fail "No scores.jsonl — cannot evaluate"
+            echo ""
+            hr
+            echo "PARTIAL RUN — boundary + corpus may have succeeded"
+            echo "Debug, then re-run: nohup bash run_vps.sh &>> run_vps.log &"
+            hr
+            exit 1
+        fi
     fi
 fi
 
 # ── Graded evaluation ───────────────────────────────────────────────────
 hr
 echo ""
-echo "6/7  Graded deposit-quality evaluation..."
-
-if [ -f "pride_graded_eval.py" ]; then
-    if $VENV pride_graded_eval.py 2>&1; then
-        ok "Graded evaluation complete"
-    else
-        fail "Graded eval failed — non-critical, main results already in step 5"
-    fi
+if [ -f "$CKPT_DIR/.ckpt_step_6" ]; then
+    ok "6/7  Graded evaluation — SKIPPED (checkpoint exists)"
 else
-    warn "pride_graded_eval.py not found — skipping graded eval"
+    echo "6/7  Graded deposit-quality evaluation..."
+
+    if [ -f "pride_graded_eval.py" ]; then
+        if $VENV pride_graded_eval.py 2>&1; then
+            ok "Graded evaluation complete"
+            touch "$CKPT_DIR/.ckpt_step_6"
+        else
+            fail "Graded eval failed — non-critical, main results already in step 5"
+        fi
+    else
+        warn "pride_graded_eval.py not found — skipping graded eval"
+    fi
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────

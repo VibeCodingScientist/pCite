@@ -181,20 +181,54 @@ async def process_corpus(
     domain: str = "metabolomics",
 ) -> int:
     output_path = output_path or DATA_OUT
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    partial_path = output_path.with_suffix(".partial.jsonl")
+
     if papers_loader is None:
         from pcite.corpus import load_papers
         papers_loader = load_papers
-    papers, all_claims = papers_loader(), []
-    for i in range(0, len(papers), 20):
-        results = await asyncio.gather(*[_extract(p, domain=domain) for p in papers[i:i+20]])
+    papers = papers_loader()
+
+    # ── Resume: load already-processed DOIs from partial file ─────────
+    all_claims: list[Claim] = []
+    done_dois: set[str] = set()
+    if partial_path.exists():
+        for line in partial_path.read_text().splitlines():
+            if not line:
+                continue
+            c = Claim.model_validate_json(line)
+            all_claims.append(c)
+            for prov in c.provenance:
+                done_dois.add(prov.doi)
+        print(f"  RESUME: {len(all_claims)} claims from {len(done_dois)} "
+              f"already-processed papers", file=sys.stderr)
+
+    remaining = [p for p in papers if p.doi not in done_dois]
+    print(f"  {len(remaining)} papers to process "
+          f"({len(papers) - len(remaining)} skipped)", file=sys.stderr)
+
+    for i in range(0, len(remaining), 20):
+        batch = remaining[i:i + 20]
+        results = await asyncio.gather(*[_extract(p, domain=domain) for p in batch])
+        batch_claims: list[Claim] = []
         for claims in results:
+            batch_claims.extend(claims)
             all_claims.extend(claims)
+        # Append batch to partial file
+        with partial_path.open("a") as pf:
+            for c in batch_claims:
+                pf.write(c.model_dump_json() + "\n")
         print(f"  {len(all_claims)} claims extracted...", file=sys.stderr)
+
     merged = _merge_all(all_claims)
-    output_path.parent.mkdir(exist_ok=True)
     with output_path.open("w") as f:
         for c in merged:
             f.write(c.model_dump_json() + "\n")
+
+    # Clean up partial file on success
+    if partial_path.exists():
+        partial_path.unlink()
+
     replicated = sum(1 for c in merged if c.replication_count > 1)
     print(f"  {len(merged)} unique claims, {replicated} seen in >1 paper", file=sys.stderr)
     return len(merged)
