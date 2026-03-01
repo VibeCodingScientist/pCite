@@ -33,6 +33,13 @@ QUALITY_FILE = DATA_DIR / "deposit_quality.json"
 # Checkpoint files for resumable build_deposit_first_corpus()
 _CKPT_PROJECTS = DATA_DIR / ".ckpt_projects.json"
 _CKPT_NEIGHBOURS = DATA_DIR / ".ckpt_neighbours.json"
+_CKPT_SECOND_DEGREE = DATA_DIR / ".ckpt_second_degree.json"
+
+# PubMed fallback queries for padding corpus if pool is too small
+FALLBACK_QUERIES = [
+    '"proteomics"[Title/Abstract] AND "neoplasms"[MeSH] AND 2015:2025[dp]',
+    '"mass spectrometry"[Title/Abstract] AND "cancer"[Title/Abstract] AND 2015:2025[dp]',
+]
 
 SEARCH_TERMS = [
     "cancer proteomics",
@@ -317,35 +324,49 @@ async def build_corpus(max_disease_papers: int | None = None) -> int:
     return len(papers)
 
 
-async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
+async def build_deposit_first_corpus(target_coverage: float = 0.32) -> int:
     """Deposit-first corpus with citation-neighbourhood negatives.
 
     Differences from build_corpus():
       - Broader PRIDE search terms (DEPOSIT_FIRST_TERMS)
       - Phase C: citation-neighbourhood sampling via OpenAlex
-      - target_coverage controls deposit-paper fraction (default 50%)
+        - C3: first-degree citing + referenced papers
+        - C3b: second-degree citing papers (citing papers of first-degree neighbours)
+      - target_coverage controls deposit-paper fraction (default 32%)
       - Fallback PubMed search by project title for projects with 0 PMIDs
+      - PubMed keyword fallback if estimated claims < 3,500
 
     Checkpoints:
-      - .ckpt_projects.json  — saved after Phase A+B+B2 (PRIDE search + PMID parsing)
-      - .ckpt_neighbours.json — saved after Phase C3 (neighbour DOI collection)
+      - .ckpt_projects.json       — saved after Phase A+B+B2 (PRIDE search + PMID parsing)
+      - .ckpt_neighbours.json     — saved after Phase C3 (first-degree neighbour DOIs)
+      - .ckpt_second_degree.json  — saved after Phase C3b (second-degree citing DOIs)
       On resume, skips to the earliest incomplete phase.
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # ── Check for existing checkpoints ────────────────────────────────
     skip_to_c4 = False
+    skip_to_c3b = False
     skip_to_c1 = False
 
-    if _CKPT_NEIGHBOURS.exists():
-        print("  RESUME: loading .ckpt_neighbours.json — skipping to C4",
+    if _CKPT_SECOND_DEGREE.exists():
+        print("  RESUME: loading .ckpt_second_degree.json — skipping to C4",
+              file=sys.stderr)
+        ckpt = json.loads(_CKPT_SECOND_DEGREE.read_text())
+        all_projects = ckpt["projects"]
+        pmid_to_accession = ckpt["pmid_to_accession"]
+        deposit_dois = ckpt["deposit_dois"]
+        neighbour_dois = set(ckpt["neighbour_dois"])
+        skip_to_c4 = True
+    elif _CKPT_NEIGHBOURS.exists():
+        print("  RESUME: loading .ckpt_neighbours.json — skipping to C3b",
               file=sys.stderr)
         ckpt = json.loads(_CKPT_NEIGHBOURS.read_text())
         all_projects = ckpt["projects"]
         pmid_to_accession = ckpt["pmid_to_accession"]
         deposit_dois = ckpt["deposit_dois"]
         neighbour_dois = set(ckpt["neighbour_dois"])
-        skip_to_c4 = True
+        skip_to_c3b = True
     elif _CKPT_PROJECTS.exists():
         print("  RESUME: loading .ckpt_projects.json — skipping to C1",
               file=sys.stderr)
@@ -356,7 +377,7 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
 
     async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
 
-        if not skip_to_c4 and not skip_to_c1:
+        if not skip_to_c4 and not skip_to_c3b and not skip_to_c1:
             # Phase A: Search PRIDE with broader terms
             print("  Phase A: PRIDE project search (deposit-first)...", file=sys.stderr)
             all_projects: dict[str, dict] = {}
@@ -421,7 +442,7 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
             print("  CHECKPOINT: .ckpt_projects.json saved", file=sys.stderr)
 
         # Phase C: Citation-neighbourhood enrichment (OpenAlex)
-        if not skip_to_c4:
+        if not skip_to_c4 and not skip_to_c3b:
             print("  Phase C: Citation-neighbourhood sampling...", file=sys.stderr)
 
             # C1: Batch-fetch deposit papers to get their DOIs
@@ -447,7 +468,7 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
             # C2: Resolve DOIs → OpenAlex IDs
             oa_map = await _resolve_openalex_ids(deposit_dois, client)
 
-            # C3: Find citation neighbours (citing + referenced papers)
+            # C3: Find first-degree citation neighbours (citing + referenced papers)
             neighbour_dois: set[str] = set()
             deposit_doi_set = set(deposit_dois)
 
@@ -459,10 +480,10 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
                         neighbour_dois.add(d)
                 await asyncio.sleep(0.1)
 
-            print(f"  {len(neighbour_dois)} unique neighbour DOIs found",
+            print(f"  {len(neighbour_dois)} unique first-degree neighbour DOIs",
                   file=sys.stderr)
 
-            # ── Checkpoint: save neighbours ───────────────────────────
+            # ── Checkpoint: save first-degree neighbours ──────────────
             _CKPT_NEIGHBOURS.write_text(json.dumps({
                 "projects": all_projects,
                 "pmid_to_accession": pmid_to_accession,
@@ -470,6 +491,43 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
                 "neighbour_dois": sorted(neighbour_dois),
             }))
             print("  CHECKPOINT: .ckpt_neighbours.json saved", file=sys.stderr)
+
+        # C3b: Second-degree citing papers
+        if not skip_to_c4:
+            print("  C3b: Second-degree citing papers...", file=sys.stderr)
+            deposit_doi_set = set(deposit_dois)
+            first_degree_list = sorted(neighbour_dois)
+
+            # Resolve first-degree neighbour DOIs → OpenAlex IDs
+            nd_oa_map = await _resolve_openalex_ids(first_degree_list, client)
+
+            second_degree_dois: set[str] = set()
+            all_known = deposit_doi_set | neighbour_dois
+
+            for doi, oa_id in nd_oa_map.items():
+                citing = await _citing_dois(oa_id, client)
+                for d in citing:
+                    if d not in all_known:
+                        second_degree_dois.add(d)
+                await asyncio.sleep(0.1)
+
+            print(f"  {len(second_degree_dois)} unique second-degree citing DOIs",
+                  file=sys.stderr)
+
+            # Merge into neighbour pool
+            neighbour_dois |= second_degree_dois
+
+            print(f"  {len(neighbour_dois)} total neighbour DOIs "
+                  f"(first + second degree)", file=sys.stderr)
+
+            # ── Checkpoint: save with second-degree ───────────────────
+            _CKPT_SECOND_DEGREE.write_text(json.dumps({
+                "projects": all_projects,
+                "pmid_to_accession": pmid_to_accession,
+                "deposit_dois": deposit_dois,
+                "neighbour_dois": sorted(neighbour_dois),
+            }))
+            print("  CHECKPOINT: .ckpt_second_degree.json saved", file=sys.stderr)
 
         # C4: Resolve neighbour DOIs → PMIDs via OpenAlex
         neighbour_pmid_map = await _dois_to_pmids(
@@ -485,7 +543,7 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
 
         # C5: Compute how many negatives to add for target coverage
         # Re-fetch deposit articles if we resumed from checkpoint
-        if skip_to_c4:
+        if skip_to_c4 or skip_to_c3b:
             deposit_pmid_list = sorted(pmid_to_accession.keys())
             deposit_articles = []
             batch_size = 200
@@ -509,6 +567,41 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
                   file=sys.stderr)
         else:
             sampled = []
+
+        # C5b: PubMed keyword fallback if estimated claims too low
+        MIN_CLAIMS = 3500
+        CLAIMS_PER_PAPER = 10  # empirical average
+        est_total_papers = n_deposit + len(sampled)
+        est_claims = est_total_papers * CLAIMS_PER_PAPER
+
+        if est_claims < MIN_CLAIMS:
+            papers_shortfall = math.ceil(
+                (MIN_CLAIMS - est_claims) / CLAIMS_PER_PAPER
+            )
+            print(f"  C5b: Estimated {est_claims} claims < {MIN_CLAIMS} minimum, "
+                  f"need ~{papers_shortfall} more papers from PubMed fallback",
+                  file=sys.stderr)
+            existing_pmids = set(pmid_to_accession.keys()) | set(sampled)
+            fallback_pmids: list[str] = []
+            for query in FALLBACK_QUERIES:
+                if len(fallback_pmids) >= papers_shortfall:
+                    break
+                try:
+                    hits = await _search_pmids(query, papers_shortfall * 2, client)
+                    for pmid in hits:
+                        if pmid not in existing_pmids and pmid not in fallback_pmids:
+                            fallback_pmids.append(pmid)
+                            if len(fallback_pmids) >= papers_shortfall:
+                                break
+                except Exception as e:
+                    print(f"    Fallback query failed: {e}", file=sys.stderr)
+                await asyncio.sleep(0.5)
+            sampled.extend(fallback_pmids)
+            print(f"  C5b: Added {len(fallback_pmids)} PubMed fallback papers, "
+                  f"new total negatives: {len(sampled)}", file=sys.stderr)
+        else:
+            print(f"  Estimated {est_claims} claims — no PubMed fallback needed",
+                  file=sys.stderr)
 
         # C6: Fetch sampled neighbour PMIDs from PubMed
         neighbour_articles: list[dict] = []
@@ -553,7 +646,7 @@ async def build_deposit_first_corpus(target_coverage: float = 0.50) -> int:
     QUALITY_FILE.write_text(json.dumps(quality, indent=2))
 
     # ── Clean up checkpoint files ─────────────────────────────────────
-    for ckpt_file in (_CKPT_PROJECTS, _CKPT_NEIGHBOURS):
+    for ckpt_file in (_CKPT_PROJECTS, _CKPT_NEIGHBOURS, _CKPT_SECOND_DEGREE):
         if ckpt_file.exists():
             ckpt_file.unlink()
     print("  CHECKPOINT: cleaned up checkpoint files", file=sys.stderr)

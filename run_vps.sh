@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # run_vps.sh — Run boundary investigation + deposit-first pipeline on VPS
-# Usage:   nohup bash run_vps.sh &> run_vps.log &
-# Resume:  nohup bash run_vps.sh &>> run_vps.log &   (completed steps are skipped)
-# Fresh:   nohup bash run_vps.sh --fresh &> run_vps.log &   (delete all checkpoints first)
+# Usage:        nohup bash run_vps.sh &> run_vps.log &
+# Resume:       nohup bash run_vps.sh &>> run_vps.log &   (completed steps are skipped)
+# Fresh:        nohup bash run_vps.sh --fresh &> run_vps.log &   (delete all checkpoints first)
+# Fresh corpus: nohup bash run_vps.sh --fresh-corpus &>> run_vps.log &   (re-run steps 4-6 only)
 set -euo pipefail
 
 cd ~/nCite
@@ -14,9 +15,19 @@ STARTED=$(date '+%Y-%m-%d %H:%M:%S')
 # ── --fresh flag: remove all checkpoint files ────────────────────────
 if [[ "${1:-}" == "--fresh" ]]; then
     echo "Cleaning all checkpoint files..."
-    rm -f "$CKPT_DIR"/.ckpt_step_* "$CKPT_DIR"/.ckpt_projects.json "$CKPT_DIR"/.ckpt_neighbours.json
+    rm -f "$CKPT_DIR"/.ckpt_step_* "$CKPT_DIR"/.ckpt_projects.json "$CKPT_DIR"/.ckpt_neighbours.json "$CKPT_DIR"/.ckpt_second_degree.json
     rm -f data/pride/claims.partial.jsonl
     echo "  Done — starting fresh run"
+fi
+
+# ── --fresh-corpus flag: re-run steps 4-6 only (keep boundary) ───────
+if [[ "${1:-}" == "--fresh-corpus" ]]; then
+    echo "Cleaning steps 4-6 checkpoint files (keeping boundary)..."
+    rm -f "$CKPT_DIR"/.ckpt_step_4 "$CKPT_DIR"/.ckpt_step_5 "$CKPT_DIR"/.ckpt_step_6
+    rm -f "$CKPT_DIR"/.ckpt_projects.json "$CKPT_DIR"/.ckpt_neighbours.json "$CKPT_DIR"/.ckpt_second_degree.json
+    rm -f data/pride/claims.partial.jsonl
+    rm -f data/pride/claims_cache.json
+    echo "  Done — will re-run corpus build + pipeline + evaluation"
 fi
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -114,8 +125,8 @@ if [ -f "$CKPT_DIR/.ckpt_step_4" ]; then
     ok "4/7  Deposit-first corpus build — SKIPPED (checkpoint exists)"
 else
     echo "4/7  Deposit-first corpus build (PRIDE API + PubMed + OpenAlex)..."
-    echo "     Broader search terms + citation-neighbourhood sampling"
-    echo "     Target ~50% deposit coverage (deposit papers + neighbour negatives)"
+    echo "     Second-degree citation neighbourhood + PubMed fallback"
+    echo "     Target ~32% deposit coverage, minimum 3,500 claims"
     echo ""
 
     if $VENV pride_corpus.py --deposit-first 2>&1; then
