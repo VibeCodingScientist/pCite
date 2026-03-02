@@ -9,8 +9,10 @@ build/
 *.trig
 .ipynb_checkpoints/
 .venv/
+.DS_Store
 data/nanopubs/
 data/pride/
+data/validation/
 
 # Dev handover / planning docs
 *_handoff*.md
