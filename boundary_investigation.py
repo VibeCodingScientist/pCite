@@ -210,12 +210,13 @@ def run_boundary_investigation() -> list[dict]:
             metrics["n_physical"] = actual
             seed_results.append(metrics)
 
-        # Average across seeds
+        # Average and std across seeds
         avg = {"target_coverage": target}
         keys = [k for k in seed_results[0] if k not in ("actual_coverage", "n_total", "n_physical")]
         for k in keys:
             vals = [sr[k] for sr in seed_results if k in sr]
             avg[k] = float(np.mean(vals))
+            avg[f"{k}_std"] = float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0
         avg["actual_coverage"] = float(np.mean([sr["actual_coverage"] for sr in seed_results]))
         avg["n_total_avg"] = float(np.mean([sr["n_total"] for sr in seed_results]))
         results.append(avg)
