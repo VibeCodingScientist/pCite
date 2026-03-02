@@ -13,15 +13,39 @@ AI systems generate scientific claims at near-zero cost. Existing citation metri
 
 ## Results
 
-Evaluated on 8,761 metabolomics claims from 1,994 papers (2021–2026), with 30,759 typed citation edges.
+Two independent corpora, evaluated with identical ground truth (`_VALIDATED = {PhysicalMeasurement, ClinicalObservation, Replicated}`). Traditional baseline is intra-corpus replication count.
 
-**Main experiment — MetaboLights-first corpus (5,495 Physical-tier claims)**
+**Corpus 1 — MetaboLights metabolomics (8,761 claims from 1,994 papers, 62.4% Physical-tier)**
 
 | Metric | pCite | Traditional | Lift |
 |---|---|---|---|
 | Mann-Whitney p (base_weight) | < 2.2e-16 | — | validated median 10.0 vs 0.5 |
 | Precision@50 | **0.94** | 0.50 | **1.88x** |
 | NDCG@50 | **0.94** | 0.60 | — |
+
+**Corpus 2 — PRIDE cancer proteomics (3,506 claims from 730 papers, 32% Physical-tier)**
+
+Four-way comparison with graded deposit quality and BioLORD-2023 embedding baseline:
+
+| Metric | pCite (graded) | pCite (flat) | Traditional | Embedding |
+|---|---|---|---|---|
+| P@50 | **1.00** | **1.00** | 0.98 | 0.46 |
+| NDCG@50 | **1.00** | **1.00** | 0.98 | 0.42 |
+
+**Coverage threshold analysis — when does pCite outperform traditional?**
+
+Subsampling MetaboLights at decreasing Physical-tier coverage (5 seeds, ±1 std):
+
+| Coverage | P@50 pCite | P@50 Traditional |
+|---|---|---|
+| 5% | 0.28 | 0.50 |
+| 10% | 0.42 | 0.50 |
+| 15% | 0.61 | 0.51 |
+| 20% | 0.67 | 0.52 |
+| 30% | **0.80** | 0.54 |
+| 62.4% | **0.94** | 0.60 |
+
+Crossover threshold is ~12% Physical-tier coverage. Below that, pCite has insufficient physical signal and traditional wins. Script: `boundary_investigation.py`; figure: `figures/fig_coverage_threshold.pdf`.
 
 **Negative control — corpus with 0 Physical-tier claims**
 
@@ -30,7 +54,7 @@ Evaluated on 8,761 metabolomics claims from 1,994 papers (2021–2026), with 30,
 | Precision@50 | 0.02 | 0.14 |
 | NDCG@50 | 0.27 | 0.97 |
 
-pCite loses predictably when no physically-grounded claims exist. This is the expected behaviour: the 1,000-fold weight gap has nothing to act on. The negative control confirms the mechanism, not a failure. Raw data in `data/negative-control/`.
+pCite loses predictably when no physically-grounded claims exist. The 1,000-fold weight gap has nothing to act on. The negative control confirms the mechanism. Raw data in `data/negative-control/`.
 
 **Sensitivity analysis — weight ratio robustness**
 
@@ -45,7 +69,7 @@ pCite loses predictably when no physically-grounded claims exist. This is the ex
 | 500:1 | 1.00 |
 | 1000:1 | 1.00 |
 
-Precision@50 lift saturates at ratio ≥ 10:1 and is insensitive to the exact production value (1000:1). The result is not an artifact of a specific weight choice. Script: `sensitivity_analysis.py`; data: `data/sensitivity/`.
+Precision@50 lift saturates at ratio ≥ 10:1 and is insensitive to the exact production value (1000:1). Script: `sensitivity_analysis.py`; data: `data/sensitivity/`.
 
 ---
 
@@ -80,6 +104,8 @@ A PhysicalMeasurement claim cited 35 times by other physical claims reaches a sc
 
 ## Pipeline
 
+**MetaboLights corpus** — deposit-first construction via EBI REST API:
+
 ```
 MetaboLights API + PubMed eUtils
         |
@@ -94,7 +120,21 @@ evaluate.py     →  data/results.json
                 →  figures/*.pdf
 ```
 
-Corpus construction is MetaboLights-first: papers retrieved via the EBI REST API are classified as PhysicalMeasurement-tier by construction, not by text inference. No classifier needed for ground truth.
+**PRIDE corpus** — deposit-first with second-degree citation neighbourhood:
+
+```
+PRIDE API + OpenAlex citation graph
+        |
+pride_corpus.py →  data/pride/papers.jsonl   (730 papers, 32% deposit coverage)
+        |
+extract.py      →  data/pride/claims.jsonl   (3,506 claims)
+        |
+graph.py        →  data/pride/scores.jsonl
+        |
+pride_graded_eval.py → data/pride/graded_table.json (four-way comparison)
+```
+
+Both corpora use deposit-first construction: papers with data deposits in public repositories (MetaboLights, PRIDE) are classified as PhysicalMeasurement-tier by construction, not by text inference. No classifier needed for ground truth.
 
 ---
 
@@ -128,20 +168,28 @@ src/pcite/
   extract.py      — Claude tool_use claim extraction
   graph.py        — OpenAlex citation graph + Gemini edge classification
   evaluate.py     — Mann-Whitney, Precision@k, NDCG@k
+pride_corpus.py   — PRIDE deposit-first corpus with citation neighbourhood
+pride_graded_eval.py — Four-way evaluation (graded/flat pCite, traditional, embedding)
+boundary_investigation.py — Coverage threshold subsampling analysis
+fig_coverage_threshold.py — Figure 4: P@50 vs Physical-tier coverage
+sensitivity_analysis.py   — Weight ratio robustness analysis
+embedding_baseline.py     — BioLORD-2023 embedding baseline
+run_poc.py        — MetaboLights orchestrator (--dry-run for cached eval)
+run_pride_poc.py  — PRIDE orchestrator
+run_vps.sh        — VPS pipeline runner with checkpoints
 data/
-  papers.jsonl
-  claims.jsonl
-  scores.jsonl
-  graph.graphml
-  results.json
+  papers.jsonl, claims.jsonl, scores.jsonl, graph.graphml, results.json
+  boundary_results.json
   negative-control/
   sensitivity/
+  pride/            — PRIDE corpus (same structure)
 figures/
   fig1_rank_comparison.pdf
   fig2_score_dist.pdf
   fig3_precision_at_k.pdf
   fig_sensitivity.pdf
-tests/             — 25 tests, no API keys needed
+  fig_coverage_threshold.pdf
+tests/             — 46 tests, no API keys needed
 docs/              — static site (GitHub Pages)
 ```
 
@@ -150,7 +198,7 @@ docs/              — static site (GitHub Pages)
 ## Requirements
 
 - Python >= 3.11
-- `ANTHROPIC_API_KEY` — claim extraction (Claude Sonnet 4.5)
+- `ANTHROPIC_API_KEY` — claim extraction (Claude Sonnet 4.6)
 - `GEMINI_API_KEY` — citation edge classification (Gemini 2.0 Flash)
 - OpenAlex is used without authentication (mailto param recommended)
 - See `.env.example` for all configuration
